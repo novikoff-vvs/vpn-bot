@@ -1,0 +1,139 @@
+definitions:
+  user.CreateRequest:
+    properties:
+      chat_id:
+        type: integer
+      email:
+        type: string
+      uuid:
+        type: string
+    type: object
+  user.CreateResponse:
+    properties:
+      user_id:
+        type: string
+    type: object
+  user.GetUserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/user.ShortUserResource'
+    type: object
+  user.ShortUserResource:
+    properties:
+      chat_id:
+        type: integer
+      email:
+        type: string
+      uuid:
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /user/{uuid}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию о пользователе по его UUID
+      parameters:
+      - description: UUID пользователя
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.GetUserResponse'
+        "400":
+          description: 'Неверный запрос"  example({"error": "invalid request"})'
+          schema:
+            type: object
+        "404":
+          description: 'Пользователь не найден" "{"error": "user not found"}" example(string)'
+          schema:
+            type: object
+        "500":
+          description: 'Внутренняя ошибка сервера"  example({"error": "internal server
+            error"})'
+          schema:
+            type: object
+      summary: Получить пользователя
+      tags:
+      - user
+  /user/by-chat/{chatId}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает краткую информацию о пользователе по его Chat ID
+      parameters:
+      - description: ChatID пользователя
+        in: path
+        name: chatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Успешный ответ"  example({"UUID": "550e8400-e29b-41d4-a716-446655440000",
+            "Email": "user@example.com", "ChatId": 123456789})'
+          schema:
+            $ref: '#/definitions/user.ShortUserResource'
+        "400":
+          description: 'Неверный запрос"  example({"error": "invalid request"})'
+          schema:
+            type: object
+        "404":
+          description: 'Пользователь не найден"  example({"error": "user not found"})'
+          schema:
+            type: object
+        "500":
+          description: 'Внутренняя ошибка сервера"  example({"error": "internal server
+            error"})'
+          schema:
+            type: object
+      summary: Получить пользователя по Chat ID
+      tags:
+      - user
+  /user/create:
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя с указанными данными и возвращает его
+        идентификатор
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.CreateResponse'
+        "400":
+          description: 'Неверный формат запроса"  example({"error": "invalid request"})'
+          schema:
+            type: object
+        "500":
+          description: 'Неверный формат запроса"  example({"error": "invalid request"})'
+          schema:
+            type: object
+      summary: Создать пользователя
+      tags:
+      - user
+swagger: "2.0"

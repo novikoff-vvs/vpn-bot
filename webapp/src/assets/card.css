@@ -1,0 +1,32 @@
+.card {
+    background: var(--bg-color);
+    border-radius: 20px;
+    padding: 25px;
+    color: var(--text-color);
+    box-shadow:
+            8px 8px 15px var(--shadow-dark),
+            -8px -8px 15px var(--shadow-light);
+    transition: all 0.3s ease;
+    width: 100%; /* Занимает всю ширину */
+    box-sizing: border-box; /* Учитывает padding в общей ширине */
+}
+
+/* Или для отступов со всех сторон, но внутри контейнера */
+.row .card {
+    margin: 16px;
+}
+
+/* Эффект при наведении */
+.card:hover {
+    box-shadow:
+            4px 4px 10px var(--shadow-dark),
+            -4px -4px 10px var(--shadow-light);
+    transform: translateY(-2px);
+}
+
+/* Эффект нажатия (active) */
+.card:active {
+    box-shadow:
+            inset 3px 3px 5px var(--shadow-dark),
+            inset -3px -3px 5px var(--shadow-light);
+}

@@ -1,0 +1,96 @@
+:root {
+  --bg-color: #e6e7ee; /* Новый основной фон */
+  --primary-color: #6d758d; /* Основной цвет элементов */
+  --shadow-light: #ffffff; /* Светлая тень */
+  --shadow-dark: #c2c9d6; /* Тёмная тень (подобрана под новый фон) */
+  --text-color: #4a4f5c; /* Цвет текста */
+  --highlight: rgba(255, 255, 255, 0.6); /* Подсветка */
+  --grid-gap: 16px;
+  --container-max-width: 1200px;
+}
+
+:root.dark {
+  --bg-color: #2a2d36;
+  --primary-color: #7d8596;
+  --shadow-dark: #1f2229;
+  --shadow-light: #353842;
+  --text-color: #e6e7ee;
+  --highlight: rgba(0, 0, 0, 0.2);
+}
+
+/* Полноразмерный контейнер (на всю ширину экрана) */
+.container-full {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0; /* Можно добавить padding, если нужны отступы по краям */
+}
+
+/* Центрированный контейнер (с макс. шириной 1200px) */
+.container {
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+}
+
+/* Контейнер строки (row) */
+.row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr); /* 12 колонок */
+  gap: var(--grid-gap);
+  width: 100%;
+  max-width: var(--container-max-width);
+  margin: 0 auto; /* Центрирование */
+}
+
+/* Колонки (col) */
+.col-1 { grid-column: span 1; }
+.col-2 { grid-column: span 2; }
+.col-3 { grid-column: span 3; }
+.col-4 { grid-column: span 4; }
+.col-5 { grid-column: span 5; }
+.col-6 { grid-column: span 6; }
+.col-7 { grid-column: span 7; }
+.col-8 { grid-column: span 8; }
+.col-9 { grid-column: span 9; }
+.col-10 { grid-column: span 10; }
+.col-11 { grid-column: span 11; }
+.col-12 { grid-column: span 12; }
+
+/* Автоматическое центрирование содержимого внутри колонок */
+[class^="col-"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Вертикальное центрирование */
+  align-items: center; /* Горизонтальное центрирование */
+}
+
+/* Адаптация под планшеты (8 колонок) */
+@media (max-width: 1024px) {
+  .row {
+    grid-template-columns: repeat(8, 1fr);
+  }
+  /* Переопределение колонок */
+  .col-md-1 { grid-column: span 1; }
+  .col-md-2 { grid-column: span 2; }
+  .col-md-3 { grid-column: span 3; }
+  .col-md-4 { grid-column: span 4; }
+  .col-md-5 { grid-column: span 5; }
+  .col-md-6 { grid-column: span 6; }
+  .col-md-7 { grid-column: span 7; }
+  .col-md-8 { grid-column: span 8; }
+  .col-md-9 { grid-column: span 8; } /* На планшетах 9 колонок нет, поэтому span 8 */
+  .col-md-10 { grid-column: span 8; }
+  .col-md-11 { grid-column: span 8; }
+  .col-md-12 { grid-column: span 8; }
+}
+
+/* Адаптация под мобилки (4 колонки) */
+@media (max-width: 768px) {
+  .row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  /* На мобилках все колонки занимают всю ширину */
+  [class^="col-"] {
+    grid-column: span 4 !important;
+  }
+}

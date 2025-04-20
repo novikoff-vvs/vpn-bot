@@ -1,0 +1,11 @@
+logger:
+  path: "./logs"
+  name: "vpn-bot"
+  is_output: true
+
+base:
+  app_port: 22822
+  swagger: true
+
+database:
+  path: database/user_service.db

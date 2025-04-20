@@ -1,0 +1,8 @@
+go 1.23.5
+
+use (
+	payment-service/src
+	pkg
+	user-service/src
+	bot-service/src
+)

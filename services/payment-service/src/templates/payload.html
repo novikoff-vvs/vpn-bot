@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оплата через YooMoney</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f7f9fc;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            font-size: 16px;
+            color: #333;
+            text-align: left;
+            cursor: pointer;
+        }
+
+        input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        input[type="submit"] {
+            padding: 12px;
+            font-size: 18px;
+            color: #fff;
+            background: rgb(80,255,252);
+            background: linear-gradient(90deg, rgba(80,255,252,1) 0%, rgba(158,51,247,1) 100%);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover {
+            background: rgb(57, 180, 177);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group input[type="number"], .form-group input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .form-group input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+
+        .footer a {
+            color: #4caf50;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            input[type="submit"] {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Оплата через ЮMoney</h1>
+    <p>Для завершения транзакции выберите метод оплаты и нажмите кнопку "Перевести".</p>
+
+
+    <form method="POST" action="https://yoomoney.ru/quickpay/confirm">
+        <!-- Скрытые поля -->
+        <input type="hidden" name="receiver" value="410011890678722"/>
+        <input type="hidden" name="label" value="{{ .label }}"/>
+        <input type="hidden" name="quickpay-form" value="button"/>
+        <input type="hidden" name="sum" value="{{.amount}}" data-type="number"/>
+
+        <div class="form-group">
+            <label>
+                <input type="radio" name="paymentType" value="PC" required/> ЮMoney
+            </label>
+            <label>
+                <input type="radio" name="paymentType" value="AC" required/> Банковской картой
+            </label>
+        </div>
+        <p style="font-size:10px;margin: 0; ">Форма оплаты пользователя: <strong>{{ .tg_name }}</strong><br>(Проверьте, что это вы)</p>
+        <input type="submit" value="Перевести"/>
+    </form>
+
+    <div class="footer">
+        <p>Есть вопросы? <a href="https://t.me/code_style" target="_blank">Для связи</a></p>
+    </div>
+</div>
+</body>
+</html>
