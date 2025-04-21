@@ -9,3 +9,8 @@ base:
 
 database:
   path: database/user_service.db
+  host: localhost
+  user: highjin
+  password: 12345678B
+  db: user_data
+  port: 5430

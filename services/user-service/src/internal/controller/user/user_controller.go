@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 	"user-service/internal/models"
-	"user-service/internal/repository/sqlite"
+	"user-service/internal/user"
 )
 
 type CreateResponse struct {
@@ -44,7 +44,7 @@ type GetUserRequest struct {
 // @Failure      400   {object}  object  "Неверный формат запроса"  example({"error": "invalid request"})
 // @Failure      500   {object}  object  "Неверный формат запроса"  example({"error": "invalid request"})
 // @Router       /user/create [post]
-func Create(userRepo *sqlite.UserRepository) gin.HandlerFunc {
+func Create(userService *user.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request CreateRequest
 		err := c.ShouldBind(&request)
@@ -52,14 +52,14 @@ func Create(userRepo *sqlite.UserRepository) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		user := models.User{
+		u := models.User{
 			Email:     request.Email,
 			UUID:      request.UUID,
 			ChatId:    request.ChatId,
 			CreatedAt: time.Time{},
 			IsActive:  true,
 		}
-		id, err := userRepo.Create(&user)
+		id, err := userService.CreateUser(&u)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -85,7 +85,7 @@ func Create(userRepo *sqlite.UserRepository) gin.HandlerFunc {
 // @Failure      404  {object}  object  "Пользователь не найден" "{"error": "user not found"}" example(string)
 // @Failure      500  {object}  object  "Внутренняя ошибка сервера"  example({"error": "internal server error"})
 // @Router       /user/{uuid} [get]
-func GetUser(userRepo *sqlite.UserRepository) gin.HandlerFunc {
+func GetUser(userService *user.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := c.Param("uuid")
 		if uuid == "" {
@@ -93,7 +93,7 @@ func GetUser(userRepo *sqlite.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		user, err := userRepo.GetByUUID(uuid)
+		u, err := userService.GetByUUID(uuid)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
@@ -101,9 +101,9 @@ func GetUser(userRepo *sqlite.UserRepository) gin.HandlerFunc {
 
 		response := GetUserResponse{
 			User: ShortUserResource{
-				UUID:   user.UUID,
-				Email:  user.Email,
-				ChatId: user.ChatId,
+				UUID:   u.UUID,
+				Email:  u.Email,
+				ChatId: u.ChatId,
 			},
 		}
 
@@ -123,7 +123,7 @@ func GetUser(userRepo *sqlite.UserRepository) gin.HandlerFunc {
 // @Failure      404  {object}  object  "Пользователь не найден"  example({"error": "user not found"})
 // @Failure      500  {object}  object  "Внутренняя ошибка сервера"  example({"error": "internal server error"})
 // @Router       /user/by-chat/{chatId} [get]
-func GetUserByChatId(userRepo *sqlite.UserRepository) gin.HandlerFunc {
+func GetUserByChatId(userService *user.Service) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		chatId, err := strconv.ParseInt(context.Param("chatId"), 10, 64)
 		if err != nil {
@@ -136,23 +136,22 @@ func GetUserByChatId(userRepo *sqlite.UserRepository) gin.HandlerFunc {
 			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "uuid is required"})
 			return
 		}
-		user, err := userRepo.GetByChatId(chatId)
+		u, err := userService.GetByChatId(chatId)
 		if err != nil {
 			PP.Error(err.Error())
 			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		if user == nil {
-			PP.Error(err.Error())
+		if u == nil {
 			context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "user not found"})
 			return
 		}
 
 		context.JSON(http.StatusOK, ShortUserResource{
-			UUID:   user.UUID,
-			Email:  user.Email,
-			ChatId: user.ChatId,
+			UUID:   u.UUID,
+			Email:  u.Email,
+			ChatId: u.ChatId,
 		})
 	}
 }

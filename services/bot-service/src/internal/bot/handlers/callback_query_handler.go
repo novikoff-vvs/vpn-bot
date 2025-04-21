@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"bot-service/internal/vpn"
+	"bot-service/internal/user"
 	"context"
 	"github.com/mr-linch/go-tg/tgb"
 )
@@ -12,12 +12,12 @@ type CallbackQueryHandlerInterface interface {
 }
 
 type CallbackQueryHandler struct {
-	vpnService vpn.ServiceInterface
+	userService user.ServiceInterface
 }
 
-func NewCallbackQueryHandler(vpnService vpn.ServiceInterface) *CallbackQueryHandler {
+func NewCallbackQueryHandler(userService user.ServiceInterface) *CallbackQueryHandler {
 	return &CallbackQueryHandler{
-		vpnService: vpnService,
+		userService: userService,
 	}
 }
 
@@ -38,7 +38,7 @@ func (h CallbackQueryHandler) GetConfigHandle(context.Context, *tgb.CallbackQuer
 
 func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.CallbackQueryUpdate) error {
 	panic(update.Update.Message)
-	_, err := h.vpnService.UserGetByChatId(int64(update.Message.Chat().ID))
+	_, err := h.userService.UserGetByChatId(int64(update.Message.Chat().ID))
 	if err != nil {
 		return err
 	}

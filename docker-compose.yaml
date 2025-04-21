@@ -1,5 +1,17 @@
 services:
-  app:
-    image: nginx
+  db:
+    image: postgres
+    container_name: db
+    restart: always
+    shm_size: 128mb
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
     environment:
-      -
+      POSTGRES_USER: highjin
+      POSTGRES_PASSWORD: 12345678B
+    ports:
+      - "5430:5432"
+
+volumes:
+  pgdata:
+    driver: local

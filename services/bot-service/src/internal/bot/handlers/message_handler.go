@@ -6,8 +6,10 @@ import (
 	usrService "bot-service/internal/user"
 	"bot-service/internal/utils"
 	"context"
+	"errors"
 	"github.com/mr-linch/go-tg"
 	"github.com/mr-linch/go-tg/tgb"
+	"pkg/exceptions"
 	"strings"
 )
 
@@ -41,17 +43,17 @@ func (h MessageHandler) GetHandlerFuncs() []func() (tgb.MessageHandler, []tgb.Fi
 func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUpdate) error {
 	var user models.User
 	user, err := h.userService.UserGetByChatId(int64(update.Message.Chat.ID))
-	if err != nil {
-		return err
-	}
-
-	if user.Email == "" {
+	if errors.Is(err, exceptions.ErrModelNotFound) {
 		err = h.userService.UserRegisterByChatId(int64(update.Message.Chat.ID), "Авторегистрация из бота", strings.TrimPrefix(update.Message.Contact.PhoneNumber, "+"))
 		if err != nil {
 			return err
 		}
 
 		return message.NewSendMessageCallBuilder().GetSuccessRegister(update, utils.BuildVlessLink(user.UUID)).RemoveKeyboard().Build().DoVoid(ctx)
+	}
+	if err != nil {
+		//todo нужно сказать пользователю, что у нас ошибка
+		return err
 	}
 
 	return message.NewSendMessageCallBuilder().GetCustomMessage(update.Answer(tg.HTML.Text(

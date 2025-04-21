@@ -4,6 +4,8 @@ import (
 	user_client "bot-service/internal/infrastructure/client/user"
 	"bot-service/internal/models"
 	"encoding/json"
+	"errors"
+	"pkg/exceptions"
 )
 
 type RepositoryInterface interface {
@@ -19,6 +21,9 @@ type HTTPUserRepository struct {
 func (r *HTTPUserRepository) GetUserByChatId(chatId int64) (models.User, error) {
 	var request = user_client.GetUserByChatIdRequest{ChatId: chatId}
 	response, err := r.client.GetByChatID(request)
+	if errors.Is(err, exceptions.ErrModelNotFound) {
+		return models.User{}, err
+	}
 	if err != nil {
 		return models.User{}, err
 	}

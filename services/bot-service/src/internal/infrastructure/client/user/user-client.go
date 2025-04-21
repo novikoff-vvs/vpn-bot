@@ -2,7 +2,9 @@ package user
 
 import (
 	"bot-service/config"
+	"errors"
 	"fmt"
+	"pkg/exceptions"
 	"resty.dev/v3"
 )
 
@@ -27,15 +29,31 @@ func (c Client) Create(req CreateUserRequest) (*resty.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	if response.IsError() {
+		return response, errors.New(response.String())
+	}
 	return response, nil
 }
 
 func (c Client) GetByChatID(req GetUserByChatIdRequest) (*resty.Response, error) {
-	//TODO добавить логирование
-	response, err := c.client.R().SetBody(req).Get(fmt.Sprintf("user/by-chat/%d", req.ChatId))
+	// TODO: добавить логирование
+	response, err := c.client.R().
+		SetBody(req).
+		SetHeader("Accept", "application/json").
+		Get(fmt.Sprintf("user/by-chat/%d", req.ChatId))
+
 	if err != nil {
 		return nil, err
 	}
+
+	if response.StatusCode() == 404 {
+		return nil, exceptions.ErrModelNotFound
+	}
+
+	if response.IsError() {
+		return nil, fmt.Errorf("unexpected status: %d, body: %s", response.StatusCode(), response.String())
+	}
+
 	return response, nil
 }
 

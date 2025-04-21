@@ -5,6 +5,8 @@ import (
 	usrRepo "bot-service/internal/repository/http/user"
 	"bot-service/internal/vpn"
 	"errors"
+	"github.com/google/uuid"
+	"pkg/exceptions"
 )
 
 type ServiceInterface interface {
@@ -25,37 +27,48 @@ func (u Service) UserExistsByChatId(chatId int64) bool {
 	panic("implement me")
 }
 
-func (u Service) UserRegisterByChatId(chatId int64, comment, uuid string) error {
-	err := u.vpnService.UserRegisterByChatId(chatId, comment, uuid)
+func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) error {
+	uuId := uuid.New()
+	var user = models.User{
+		ChatId:         chatId,
+		Email:          phone,
+		UUID:           uuId.String(),
+		SubscriptionId: "",
+	}
+
+	err := u.userRepo.CreateUser(&user)
 	if err != nil {
 		return err
 	}
-	user, err := u.vpnService.UserGetByChatId(chatId)
+
+	err = u.vpnService.UserRegisterByChatId(user, comment)
 	if err != nil {
 		return err
 	}
-	err = u.userRepo.CreateUser(&user)
-	if err != nil {
-		return err
-	}
+
 	return nil
 }
 
 func (u Service) UserGetByChatId(chatId int64) (models.User, error) {
-	var user models.User
 	user, err := u.userRepo.GetUserByChatId(chatId)
-
-	if err != nil || user.ChatId == 0 {
-		user, err = u.vpnService.UserGetByChatId(chatId)
-		if err != nil {
-			return models.User{}, err
-		}
-	}
-	if user.ChatId == 0 {
-		return models.User{}, errors.New("user not found")
+	if err == nil {
+		return user, nil
 	}
 
-	return user, nil
+	if !errors.Is(err, exceptions.ErrModelNotFound) {
+		return models.User{}, err // другая ошибка
+	}
+
+	user, err = u.vpnService.UserGetByChatId(chatId)
+	if err == nil {
+		return user, nil
+	}
+
+	if errors.Is(err, exceptions.ErrModelNotFound) {
+		return models.User{}, err
+	}
+
+	return models.User{}, err
 }
 
 func (u Service) UserGetByEmail(email string) (models.User, error) {

@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"bot-service/internal/bot/message"
-	"bot-service/internal/models"
 	usrService "bot-service/internal/user"
 	"context"
+	"errors"
 	"github.com/mr-linch/go-tg/tgb"
+	"pkg/exceptions"
 )
 
 type CommandHandlerInterface interface {
@@ -29,15 +30,13 @@ func NewCommandHandler(userService usrService.ServiceInterface) *CommandHandler 
 }
 
 func (h CommandHandler) StartCommandHandle(ctx context.Context, msg *tgb.MessageUpdate) error {
-	var user models.User
 	var err error
-	user, err = h.userService.UserGetByChatId(int64(msg.Chat.ID))
+	_, err = h.userService.UserGetByChatId(int64(msg.Chat.ID))
+	if errors.Is(err, exceptions.ErrModelNotFound) {
+		return message.NewSendMessageCallBuilder().GetFirstMessage(msg).AddRequestContactKeyboard().Build().DoVoid(ctx)
+	}
 	if err != nil {
 		return err
-	}
-
-	if user.Email == "" {
-		return message.NewSendMessageCallBuilder().GetFirstMessage(msg).AddRequestContactKeyboard().Build().DoVoid(ctx)
 	}
 
 	return message.NewSendMessageCallBuilder().GetReturnMessage(msg).Build().DoVoid(ctx)

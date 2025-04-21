@@ -5,12 +5,15 @@ import (
 	"github.com/novikoff-vvs/logger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"pkg/infrastructure/DB/gorm"
 	"pkg/infrastructure/http"
 	"user-service/config"
 	"user-service/docs"
 	"user-service/internal/controller/user"
 	"user-service/internal/migration"
-	"user-service/internal/repository/sqlite"
+	sqliteSubscription "user-service/internal/repository/subscription/sqlite"
+	sqliteUser "user-service/internal/repository/user/sqlite"
+	user2 "user-service/internal/user"
 )
 
 //	@contact.name	API Support
@@ -41,7 +44,12 @@ func main() {
 		return
 	}
 
-	userRepo := sqlite.NewUserRepository(db)
+	newDatabaseService := gorm.NewDBService(db)
+
+	userRepo := sqliteUser.NewUserRepository(newDatabaseService)
+	subscrRepo := sqliteSubscription.NewSubscriptionRepository(newDatabaseService)
+
+	userService := user2.NewUserService(userRepo, subscrRepo)
 
 	s := http.NewServer(LoggingService)
 
@@ -56,7 +64,7 @@ func main() {
 		s.GetWebGroup().GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	user.RegisterRoutes(s, userRepo, LoggingService)
+	user.RegisterRoutes(s, userService, LoggingService)
 	err = s.Run(cfg.Base.AppPort)
 	if err != nil {
 		LoggingService.Error(err.Error())

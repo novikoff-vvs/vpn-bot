@@ -4,18 +4,18 @@ import (
 	"bot-service/config"
 	"bot-service/internal/models"
 	"encoding/json"
-	"github.com/google/uuid"
 	"github.com/novikoff-vvs/logger"
 	"github.com/novikoff-vvs/xui"
 	"github.com/novikoff-vvs/xui/dto"
 	"github.com/novikoff-vvs/xui/requests"
+	"pkg/exceptions"
 	"strconv"
 	"time"
 )
 
 type ServiceInterface interface {
 	UserExistsByChatId(chatId int64) bool
-	UserRegisterByChatId(chatId int64, comment, uuid string) error
+	UserRegisterByChatId(user models.User, comment string) error
 	UserGetByChatId(chatId int64) (models.User, error)
 	UserGetByEmail(email string) (models.User, error)
 	ResetClientTraffic(chatId int64) error
@@ -55,21 +55,20 @@ func (s Service) UserExistsByChatId(chatId int64) bool {
 	return false
 }
 
-func (s Service) UserRegisterByChatId(chatId int64, comment, phone string) error {
-	uuId := uuid.New()
+func (s Service) UserRegisterByChatId(user models.User, comment string) error {
 	clients := requests.AddClientToInboundClientRequest{
 		Clients: []dto.Client{
 			{
 				Comment:    comment,
-				Email:      phone,
+				Email:      user.Email,
 				Enable:     true,
 				ExpiryTime: time.Now().AddDate(0, 0, 1).UnixMilli(),
 				Flow:       "",
-				Id:         uuId.String(),
+				Id:         user.UUID,
 				LimitIp:    0,
 				Reset:      0,
-				SubId:      uuId.String(),
-				TgId:       json.Number(strconv.FormatInt(chatId, 10)),
+				SubId:      user.UUID,
+				TgId:       json.Number(strconv.FormatInt(user.ChatId, 10)),
 				TotalGB:    2 * 1024 * 1024 * 1024,
 			},
 		},
@@ -113,7 +112,7 @@ func (s Service) UserGetByChatId(chatId int64) (models.User, error) {
 		}
 	}
 
-	return models.User{}, nil
+	return models.User{}, exceptions.ErrModelNotFound
 }
 
 func (s Service) UserGetByEmail(email string) (models.User, error) {

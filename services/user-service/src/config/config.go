@@ -22,7 +22,12 @@ type Base struct {
 }
 
 type Database struct {
-	Path string `mapstructure:"PATH"`
+	Path     string `mapstructure:"PATH"`
+	Host     string `mapstructure:"HOST"`
+	User     string `mapstructure:"USER"`
+	Password string `mapstructure:"PASSWORD"`
+	DB       string `mapstructure:"DB"`
+	Port     string `mapstructure:"PORT"`
 }
 
 func LoadConfigs() (*Config, error) {
