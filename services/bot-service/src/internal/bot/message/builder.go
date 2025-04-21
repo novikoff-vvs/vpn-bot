@@ -1,6 +1,7 @@
 package message
 
 import (
+	"fmt"
 	"github.com/mr-linch/go-tg"
 	"github.com/mr-linch/go-tg/tgb"
 )
@@ -64,12 +65,12 @@ func (b Builder) AddRequestContactKeyboard() Builder {
 	b.sndMsg.ReplyMarkup(inlineKeyboard)
 	return b
 }
-func (b Builder) AddRequestMainMenuKeyboard() Builder {
+func (b Builder) AddRequestMainMenuKeyboard(uuid string) Builder {
 	// Создаем кнопку для открытия WebApp
 	webAppButton :=
 		tg.NewKeyboardButtonWebApp("Открыть приложение",
 			tg.WebAppInfo{
-				URL: "https://nvs-proxy.ru/?user_id=", // Замените на URL вашего WebApp
+				URL: fmt.Sprintf("https://nvs-proxy.ru/?payment_uuid=%s", uuid), // Замените на URL вашего WebApp
 
 			})
 

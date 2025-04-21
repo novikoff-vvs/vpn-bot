@@ -49,7 +49,7 @@ func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUp
 			return err
 		}
 
-		return message.NewSendMessageCallBuilder().GetSuccessRegister(update, utils.BuildVlessLink(user.UUID)).RemoveKeyboard().Build().DoVoid(ctx)
+		return message.NewSendMessageCallBuilder().GetSuccessRegister(update, utils.BuildVlessLink(user.UUID)).AddRequestMainMenuKeyboard("POEBEN").RemoveKeyboard().Build().DoVoid(ctx)
 	}
 	if err != nil {
 		//todo нужно сказать пользователю, что у нас ошибка

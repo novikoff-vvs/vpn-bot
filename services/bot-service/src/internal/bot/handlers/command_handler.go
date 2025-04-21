@@ -39,5 +39,5 @@ func (h CommandHandler) StartCommandHandle(ctx context.Context, msg *tgb.Message
 		return err
 	}
 
-	return message.NewSendMessageCallBuilder().GetReturnMessage(msg).Build().DoVoid(ctx)
+	return message.NewSendMessageCallBuilder().GetReturnMessage(msg).AddRequestMainMenuKeyboard("HUISOS").Build().DoVoid(ctx)
 }

@@ -12,6 +12,28 @@ services:
     ports:
       - "5430:5432"
 
+  user_service:
+    image: registry.novvs.ru/vpn-bot-user-service:latest
+    container_name: user_service
+    pull_policy: always
+    depends_on:
+      - db
+  payment_service:
+    image: registry.novvs.ru/vpn-bot-payment-service:latest
+    pull_policy: always
+    container_name: payment_service
+    ports:
+      - "1122:1122"
+    depends_on:
+      - db
+  bot_service:
+    image: registry.novvs.ru/vpn-bot-bot-service:latest
+    pull_policy: always
+    container_name: bot_service
+    depends_on:
+      - db
+
+
 volumes:
   pgdata:
     driver: local

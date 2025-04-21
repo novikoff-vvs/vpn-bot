@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Сервисы и их пути (можно переопределить через переменную окружения SERVICES)
-SERVICES=${SERVICES:-"bot-service=./services/bot-service user-service=./services/user-service"}
+SERVICES=${SERVICES:-"bot-service=./services/bot-service user-service=./services/user-service payment-service=./services/payment-service"}
 
 # Функция для запуска сервиса через air
 start_service() {
