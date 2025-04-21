@@ -24,10 +24,4 @@ jobs:
         uses: golangci/golangci-lint-action@v7
         with:
           version: v2.0
-          args: ./services/bot-service/src/...
-
-      - name: Lint user-service
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.0
-          args: ./services/user-service/src/...
+          args: ./...
