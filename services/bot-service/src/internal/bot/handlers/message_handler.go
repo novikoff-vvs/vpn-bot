@@ -42,9 +42,9 @@ func (h MessageHandler) GetHandlerFuncs() []func() (tgb.MessageHandler, []tgb.Fi
 
 func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUpdate) error {
 	var user models.User
-	user, err := h.userService.UserGetByChatId(int64(update.Message.Chat.ID))
+	user, err := h.userService.UserGetByChatId(int64(update.Chat.ID))
 	if errors.Is(err, exceptions.ErrModelNotFound) {
-		err = h.userService.UserRegisterByChatId(int64(update.Message.Chat.ID), "Авторегистрация из бота", strings.TrimPrefix(update.Message.Contact.PhoneNumber, "+"))
+		err = h.userService.UserRegisterByChatId(int64(update.Chat.ID), "Авторегистрация из бота", strings.TrimPrefix(update.Contact.PhoneNumber, "+"))
 		if err != nil {
 			return err
 		}

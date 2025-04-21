@@ -33,15 +33,9 @@ func (h CallbackQueryHandler) GetCallbackQueryHandlersFunc() map[string]tgb.Call
 
 func (h CallbackQueryHandler) GetConfigHandle(context.Context, *tgb.CallbackQueryUpdate) error {
 	panic("implement me")
-	return nil
+
 }
 
 func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.CallbackQueryUpdate) error {
-	panic(update.Update.Message)
-	_, err := h.userService.UserGetByChatId(int64(update.Message.Chat().ID))
-	if err != nil {
-		return err
-	}
-
 	return update.AnswerText("qwrqwr", true).DoVoid(ctx)
 }
