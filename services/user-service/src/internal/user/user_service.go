@@ -52,8 +52,11 @@ func (s Service) CreateUser(user *models.User) (string, error) {
 		return "", errors.New("cannot create subscription")
 	}
 	err = s.userRepo.CommitTransaction()
-	err = s.subscriptionRepo.CommitTransaction()
+	if err != nil {
+		return "", err
+	}
 
+	err = s.subscriptionRepo.CommitTransaction()
 	if err != nil {
 		return "", err
 	}
