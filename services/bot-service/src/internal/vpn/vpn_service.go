@@ -15,7 +15,7 @@ import (
 
 type ServiceInterface interface {
 	UserExistsByChatId(chatId int64) bool
-	UserRegisterByChatId(user models.User, comment string) error
+	UserRegisterByChatId(user *models.User, comment string) error
 	UserGetByChatId(chatId int64) (models.User, error)
 	UserGetByEmail(email string) (models.User, error)
 	ResetClientTraffic(chatId int64) error
@@ -55,7 +55,7 @@ func (s Service) UserExistsByChatId(chatId int64) bool {
 	return false
 }
 
-func (s Service) UserRegisterByChatId(user models.User, comment string) error {
+func (s Service) UserRegisterByChatId(user *models.User, comment string) error {
 	clients := requests.AddClientToInboundClientRequest{
 		Clients: []dto.Client{
 			{

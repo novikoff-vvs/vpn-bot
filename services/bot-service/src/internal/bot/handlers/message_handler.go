@@ -44,7 +44,7 @@ func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUp
 	var user models.User
 	user, err := h.userService.UserGetByChatId(int64(update.Chat.ID))
 	if errors.Is(err, exceptions.ErrModelNotFound) {
-		err = h.userService.UserRegisterByChatId(int64(update.Chat.ID), "Авторегистрация из бота", strings.TrimPrefix(update.Contact.PhoneNumber, "+"))
+		user, err = h.userService.UserRegisterByChatId(int64(update.Chat.ID), "Авторегистрация из бота", strings.TrimPrefix(update.Contact.PhoneNumber, "+"))
 		if err != nil {
 			return err
 		}
