@@ -2,3 +2,5 @@
 *logs/
 .idea/
 *.db
+/services/bot-service/.env
+/services/user-service/.env

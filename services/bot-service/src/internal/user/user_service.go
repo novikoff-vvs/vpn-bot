@@ -11,7 +11,7 @@ import (
 
 type ServiceInterface interface {
 	UserExistsByChatId(chatId int64) bool
-	UserRegisterByChatId(chatId int64, comment, uuid string) error
+	UserRegisterByChatId(chatId int64, comment, phone string) (models.User, error)
 	UserGetByChatId(chatId int64) (models.User, error)
 	UserGetByEmail(email string) (models.User, error)
 	ResetClientTraffic(chatId int64) error
@@ -27,7 +27,7 @@ func (u Service) UserExistsByChatId(chatId int64) bool {
 	panic("implement me")
 }
 
-func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) error {
+func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) (models.User, error) {
 	uuId := uuid.New()
 	var user = models.User{
 		ChatId:         chatId,
@@ -38,25 +38,21 @@ func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) error
 
 	err := u.userRepo.CreateUser(&user)
 	if err != nil {
-		return err
+		return models.User{}, err
 	}
 
-	err = u.vpnService.UserRegisterByChatId(user, comment)
+	err = u.vpnService.UserRegisterByChatId(&user, comment)
 	if err != nil {
-		return err
+		return models.User{}, err
 	}
 
-	return nil
+	return user, nil
 }
 
 func (u Service) UserGetByChatId(chatId int64) (models.User, error) {
 	user, err := u.userRepo.GetUserByChatId(chatId)
 	if err == nil {
 		return user, nil
-	}
-
-	if !errors.Is(err, exceptions.ErrModelNotFound) {
-		return models.User{}, err // другая ошибка
 	}
 
 	user, err = u.vpnService.UserGetByChatId(chatId)
