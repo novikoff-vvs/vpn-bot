@@ -3,13 +3,18 @@ package main
 import (
 	"bot-service/config"
 	"bot-service/internal/bot"
-	"bot-service/internal/controllers"
-	usrClient "bot-service/internal/infrastructure/client/user"
-	"bot-service/internal/infrastructure/http"
 	"bot-service/internal/repository/http/user"
+	"bot-service/internal/repository/http/vpn"
+	"bot-service/internal/singleton"
 	usrService "bot-service/internal/user"
-	"bot-service/internal/vpn"
 	"github.com/novikoff-vvs/logger"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"os"
+	"os/signal"
+	usrClient "pkg/infrastructure/client/user"
+	vpn2 "pkg/infrastructure/client/vpn"
+	"syscall"
 )
 
 func main() {
@@ -17,19 +22,24 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	client := usrClient.NewUserClient(cfg.UserService)
-	userRepo := user.NewHTTPUserRepository(client)
+	singleton.Boot(cfg)
 
 	lg, err := logger.NewZapLogger(cfg.Logger.Path, cfg.Logger.Name, cfg.Logger.IsOutput)
 	if err != nil {
 		panic(err)
 	}
-	vpnService, err := vpn.NewVPNService(cfg.VpnService, lg)
-	if err != nil {
-		panic(err)
-	}
+	lg.Info("Bot-service started", zap.Field{
+		Key:    "service",
+		Type:   zapcore.StringType,
+		String: "Bot-service",
+	})
 
-	userService := usrService.NewUserService(vpnService, userRepo)
+	userClient := usrClient.NewUserClient(cfg.UserService)
+	userRepo := user.NewHTTPUserRepository(userClient)
+	vpnClient := vpn2.NewVpnClient(cfg.VpnService, lg)
+	vpnRepo := vpn.NewHTTPVPNUserRepository(vpnClient)
+
+	userService := usrService.NewUserService(vpnRepo, userRepo)
 
 	service := bot.NewService(cfg.BotSettings.Token, userService)
 	go func() {
@@ -39,14 +49,19 @@ func main() {
 		}
 	}()
 
-	api := http.NewApiServer()
-
-	api.SetupControllers([]http.Controller{
-		controllers.NewWebhookController(vpnService),
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	lg.Info("Bot-service started", zap.Field{
+		Key:    "service",
+		Type:   zapcore.StringType,
+		String: "Bot-service",
 	})
-
-	err = api.Start()
-	if err != nil {
-		panic(err)
+	select {
+	case <-ch:
 	}
+	lg.Info("Bot-service down", zap.Field{
+		Key:    "service",
+		Type:   zapcore.StringType,
+		String: "Bot-service",
+	})
 }

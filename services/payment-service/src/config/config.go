@@ -5,23 +5,13 @@ import (
 )
 
 type Config struct {
-	Logger      Logger      `mapstructure:"logger"`
-	BotSettings BotSettings `mapstructure:"bot_settings"`
-	UserService UserService `mapstructure:"user_service"`
+	Logger Logger `mapstructure:"logger"`
 }
 
 type Logger struct {
 	Path     string `mapstructure:"path"`
 	Name     string `mapstructure:"name"`
 	IsOutput bool   `mapstructure:"is_output"`
-}
-
-type UserService struct {
-	Url string `mapstructure:"url"`
-}
-
-type BotSettings struct {
-	Token string `mapstructure:"token"`
 }
 
 func LoadConfigs() (*Config, error) {

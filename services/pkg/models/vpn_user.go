@@ -1,6 +1,6 @@
 package models
 
-type User struct {
+type VpnUser struct {
 	ChatId         int64  `json:"chat_id"`
 	Email          string `json:"email"`
 	UUID           string `gorm:"id"`

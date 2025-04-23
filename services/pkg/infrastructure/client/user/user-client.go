@@ -1,9 +1,9 @@
 package user
 
 import (
-	"bot-service/config"
 	"errors"
 	"fmt"
+	"pkg/config"
 	"pkg/exceptions"
 	"resty.dev/v3"
 )

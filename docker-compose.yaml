@@ -5,7 +5,8 @@ services:
     restart: always
     shm_size: 128mb
     volumes:
-      - pgdata:/var/lib/postgresql/data/
+      - .docker/db_data/:/var/lib/postgresql/data/
+      - .docker/init/:/docker-entrypoint-initdb.d/
     environment:
       POSTGRES_USER: highjin
       POSTGRES_PASSWORD: 12345678B

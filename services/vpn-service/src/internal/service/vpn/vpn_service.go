@@ -1,29 +1,29 @@
 package vpn
 
 import (
-	"bot-service/config"
-	"bot-service/internal/models"
 	"encoding/json"
 	"github.com/novikoff-vvs/logger"
 	"github.com/novikoff-vvs/xui"
 	"github.com/novikoff-vvs/xui/dto"
 	"github.com/novikoff-vvs/xui/requests"
 	"pkg/exceptions"
+	"pkg/models"
 	"strconv"
 	"time"
+	"vpn-service/config"
 )
 
 type ServiceInterface interface {
 	UserExistsByChatId(chatId int64) bool
-	UserRegisterByChatId(user *models.User, comment string) error
-	UserGetByChatId(chatId int64) (models.User, error)
-	UserGetByEmail(email string) (models.User, error)
+	UserRegisterByChatId(user *models.VpnUser, comment string) error
+	UserGetByChatId(chatId int64) (models.VpnUser, error)
+	UserGetByEmail(email string) (models.VpnUser, error)
 	ResetClientTraffic(chatId int64) error
 }
 
 type Service struct {
 	client *xui.Client
-	cfg    config.VpnService
+	cfg    config.Xui
 	lg     logger.Interface
 }
 
@@ -55,7 +55,7 @@ func (s Service) UserExistsByChatId(chatId int64) bool {
 	return false
 }
 
-func (s Service) UserRegisterByChatId(user *models.User, comment string) error {
+func (s Service) UserRegisterByChatId(user *models.VpnUser, comment string) error {
 	clients := requests.AddClientToInboundClientRequest{
 		Clients: []dto.Client{
 			{
@@ -93,17 +93,17 @@ func (s Service) UserRegisterByChatId(user *models.User, comment string) error {
 	return nil
 }
 
-func (s Service) UserGetByChatId(chatId int64) (models.User, error) {
+func (s Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 	inbound, err := s.client.GetInbound(s.cfg.InboundID)
 	if err != nil {
 		s.lg.Error(err.Error())
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
 
 	for _, client := range inbound.GetSettings().Clients {
 		id, _ := client.TgId.Int64()
 		if id == chatId {
-			return models.User{
+			return models.VpnUser{
 				ChatId:         id,
 				Email:          client.Email,
 				UUID:           client.Id,
@@ -112,19 +112,19 @@ func (s Service) UserGetByChatId(chatId int64) (models.User, error) {
 		}
 	}
 
-	return models.User{}, exceptions.ErrModelNotFound
+	return models.VpnUser{}, exceptions.ErrModelNotFound
 }
 
-func (s Service) UserGetByEmail(email string) (models.User, error) {
+func (s Service) UserGetByEmail(email string) (models.VpnUser, error) {
 	_, err := s.client.GetUserByEmail(requests.GetUserByEmailRequest{Email: email})
 	if err != nil {
 		s.lg.Error(err.Error())
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
-	return models.User{}, nil
+	return models.VpnUser{}, nil
 }
 
-func NewVPNService(cfg config.VpnService, lg logger.Interface) (*Service, error) {
+func NewVPNService(cfg config.Xui, lg logger.Interface) (*Service, error) {
 	client := xui.NewClient(cfg.BaseURL, cfg.Username, cfg.Password)
 	err := client.Login()
 	if err != nil {

@@ -2,14 +2,16 @@ package config
 
 import (
 	"log"
+	"pkg/config"
 	pkg_config "pkg/config"
 )
 
 type Config struct {
-	Logger      Logger      `mapstructure:"logger"`
-	VpnService  VpnService  `mapstructure:"vpn_service"`
-	BotSettings BotSettings `mapstructure:"bot_settings"`
-	UserService UserService `mapstructure:"user_service"`
+	Logger         Logger             `mapstructure:"logger"`
+	VpnService     config.VpnService  `mapstructure:"vpn_service"`
+	BotSettings    BotSettings        `mapstructure:"bot_settings"`
+	UserService    config.UserService `mapstructure:"user_service"`
+	PaymentService PaymentService     `mapstructure:"payment_service"`
 }
 
 type Logger struct {
@@ -18,14 +20,8 @@ type Logger struct {
 	IsOutput bool   `mapstructure:"is_output"`
 }
 
-type VpnService struct {
-	BaseURL   string `mapstructure:"base_url"`
-	Username  string `mapstructure:"username"`
-	Password  string `mapstructure:"password"`
-	InboundID int    `mapstructure:"inbound_id"`
-}
-
-type UserService struct {
+// TODO вынести в pkg
+type PaymentService struct {
 	Url string `mapstructure:"url"`
 }
 

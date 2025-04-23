@@ -4,13 +4,13 @@ logger:
   is_output: true
 
 base:
-  app_port: 22822
-  swagger: true
+  app_port:
+  swagger:
 
 database:
   path: database/user_service.db
-  host: db
-  user: highjin
-  password: 12345678B
-  db: user_data
-  port: 5432
+  host:
+  user:
+  password:
+  db:
+  port:

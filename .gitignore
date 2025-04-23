@@ -4,3 +4,6 @@
 *.db
 /services/bot-service/.env
 /services/user-service/.env
+/services/payment-service/.env
+/.docker/db_data/
+/services/vpn-service/.env

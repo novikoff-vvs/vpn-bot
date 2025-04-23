@@ -3,13 +3,10 @@ module bot-service
 go 1.23.5
 
 require (
-	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mr-linch/go-tg v0.15.0
 	github.com/novikoff-vvs/logger v0.0.0-20250314164658-4197b1181865
-	github.com/spf13/viper v1.20.1
-	resty.dev/v3 v3.0.0-beta.2
 )
 
 require (

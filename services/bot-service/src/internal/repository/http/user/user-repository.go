@@ -1,36 +1,36 @@
 package user
 
 import (
-	user_client "bot-service/internal/infrastructure/client/user"
-	"bot-service/internal/models"
 	"encoding/json"
 	"errors"
 	"pkg/exceptions"
+	user_client "pkg/infrastructure/client/user"
+	"pkg/models"
 )
 
 type RepositoryInterface interface {
-	GetUser(id string) (models.User, error)
-	GetUserByChatId(chatId int64) (models.User, error)
-	CreateUser(user *models.User) error
+	GetUser(id string) (models.VpnUser, error)
+	GetUserByChatId(chatId int64) (models.VpnUser, error)
+	CreateUser(user *models.VpnUser) error
 }
 
 type HTTPUserRepository struct {
 	client *user_client.Client
 }
 
-func (r *HTTPUserRepository) GetUserByChatId(chatId int64) (models.User, error) {
+func (r *HTTPUserRepository) GetUserByChatId(chatId int64) (models.VpnUser, error) {
 	var request = user_client.GetUserByChatIdRequest{ChatId: chatId}
 	response, err := r.client.GetByChatID(request)
 	if errors.Is(err, exceptions.ErrModelNotFound) {
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
 	if err != nil {
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
-	var user = models.User{}
+	var user = models.VpnUser{}
 	err = json.Unmarshal(response.Bytes(), &user)
 	if err != nil {
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
 	return user, nil
 }
@@ -41,12 +41,11 @@ func NewHTTPUserRepository(client *user_client.Client) *HTTPUserRepository {
 	}
 }
 
-// GetUser получает пользователя по ID
-func (r *HTTPUserRepository) GetUser(id string) (models.User, error) {
-	return models.User{}, nil
+func (r *HTTPUserRepository) GetUser(id string) (models.VpnUser, error) {
+	return models.VpnUser{}, nil
 }
 
-func (r *HTTPUserRepository) CreateUser(user *models.User) error {
+func (r *HTTPUserRepository) CreateUser(user *models.VpnUser) error {
 	//TODO добавить логирование
 	var req = user_client.CreateUserRequest{
 		ChatId: user.ChatId,

@@ -1,8 +1,7 @@
 package handlers
 
 import (
-	"bot-service/internal/bot/message"
-	"bot-service/internal/models"
+	"bot-service/internal/singleton"
 	usrService "bot-service/internal/user"
 	"bot-service/internal/utils"
 	"context"
@@ -10,6 +9,7 @@ import (
 	"github.com/mr-linch/go-tg"
 	"github.com/mr-linch/go-tg/tgb"
 	"pkg/exceptions"
+	"pkg/models"
 	"strings"
 )
 
@@ -41,7 +41,7 @@ func (h MessageHandler) GetHandlerFuncs() []func() (tgb.MessageHandler, []tgb.Fi
 }
 
 func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUpdate) error {
-	var user models.User
+	var user models.VpnUser
 	user, err := h.userService.UserGetByChatId(int64(update.Chat.ID))
 	if errors.Is(err, exceptions.ErrModelNotFound) {
 		user, err = h.userService.UserRegisterByChatId(int64(update.Chat.ID), "Авторегистрация из бота", strings.TrimPrefix(update.Contact.PhoneNumber, "+"))
@@ -49,14 +49,14 @@ func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUp
 			return err
 		}
 
-		return message.NewSendMessageCallBuilder().GetSuccessRegister(update, utils.BuildVlessLink(user.UUID)).AddRequestMainMenuKeyboard("POEBEN").RemoveKeyboard().Build().DoVoid(ctx)
+		return singleton.MessageBuilder().GetSuccessRegister(update, utils.BuildVlessLink(user.UUID)).AddRequestMainMenuKeyboard("POEBEN").RemoveKeyboard().Build().DoVoid(ctx)
 	}
 	if err != nil {
 		//todo нужно сказать пользователю, что у нас ошибка
 		return err
 	}
 
-	return message.NewSendMessageCallBuilder().GetCustomMessage(update.Answer(tg.HTML.Text(
+	return singleton.MessageBuilder().GetCustomMessage(update.Answer(tg.HTML.Text(
 		tg.HTML.Bold("😻 Вы уже зарегистрированы!"),
 		"",
 		tg.HTML.Text("Более не нужно делиться номером телефона."),

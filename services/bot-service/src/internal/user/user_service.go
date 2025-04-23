@@ -1,24 +1,24 @@
 package user
 
 import (
-	"bot-service/internal/models"
 	usrRepo "bot-service/internal/repository/http/user"
-	"bot-service/internal/vpn"
+	"bot-service/internal/repository/http/vpn"
 	"errors"
 	"github.com/google/uuid"
 	"pkg/exceptions"
+	"pkg/models"
 )
 
 type ServiceInterface interface {
 	UserExistsByChatId(chatId int64) bool
-	UserRegisterByChatId(chatId int64, comment, phone string) (models.User, error)
-	UserGetByChatId(chatId int64) (models.User, error)
-	UserGetByEmail(email string) (models.User, error)
+	UserRegisterByChatId(chatId int64, comment, phone string) (models.VpnUser, error)
+	UserGetByChatId(chatId int64) (models.VpnUser, error)
+	UserGetByEmail(email string) (models.VpnUser, error)
 	ResetClientTraffic(chatId int64) error
 }
 
 type Service struct {
-	vpnService vpn.ServiceInterface
+	vpnService vpn.RepositoryInterface
 	userRepo   usrRepo.RepositoryInterface
 }
 
@@ -27,9 +27,9 @@ func (u Service) UserExistsByChatId(chatId int64) bool {
 	panic("implement me")
 }
 
-func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) (models.User, error) {
+func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) (models.VpnUser, error) {
 	uuId := uuid.New()
-	var user = models.User{
+	var user = models.VpnUser{
 		ChatId:         chatId,
 		Email:          phone,
 		UUID:           uuId.String(),
@@ -38,36 +38,36 @@ func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) (mode
 
 	err := u.userRepo.CreateUser(&user)
 	if err != nil {
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
 
-	err = u.vpnService.UserRegisterByChatId(&user, comment)
+	err = u.vpnService.CreateUser(&user)
 	if err != nil {
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
 
 	return user, nil
 }
 
-func (u Service) UserGetByChatId(chatId int64) (models.User, error) {
+func (u Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 	user, err := u.userRepo.GetUserByChatId(chatId)
 	if err == nil {
 		return user, nil
 	}
 
-	user, err = u.vpnService.UserGetByChatId(chatId)
+	user, err = u.vpnService.GetUserByChatId(chatId)
 	if err == nil {
 		return user, nil
 	}
 
 	if errors.Is(err, exceptions.ErrModelNotFound) {
-		return models.User{}, err
+		return models.VpnUser{}, err
 	}
 
-	return models.User{}, err
+	return models.VpnUser{}, err
 }
 
-func (u Service) UserGetByEmail(email string) (models.User, error) {
+func (u Service) UserGetByEmail(email string) (models.VpnUser, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -77,7 +77,7 @@ func (u Service) ResetClientTraffic(chatId int64) error {
 	panic("implement me")
 }
 
-func NewUserService(vpnService vpn.ServiceInterface, userRepo usrRepo.RepositoryInterface) *Service {
+func NewUserService(vpnService vpn.RepositoryInterface, userRepo usrRepo.RepositoryInterface) *Service {
 	return &Service{
 		vpnService: vpnService,
 		userRepo:   userRepo,

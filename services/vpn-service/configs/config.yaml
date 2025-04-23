@@ -1,0 +1,14 @@
+logger:
+  path: "./logs"
+  name: "vpn-bot"
+  is_output: false
+
+vpn_service:
+  base_url:
+  username:
+  password:
+  inbound_id:
+
+base:
+  app_port:
+  swagger:
