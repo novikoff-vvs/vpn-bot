@@ -65,7 +65,12 @@ func (b Builder) AddRequestContactKeyboard() Builder {
 	b.sndMsg.ReplyMarkup(inlineKeyboard)
 	return b
 }
-func (b Builder) AddRequestMainMenuKeyboard(uuid string) Builder {
+func (b Builder) AddRequestMainMenuKeyboard() Builder {
+
+	b.sndMsg.ReplyMarkup(b.GetMainMenuKeyboad())
+	return b
+}
+func (b Builder) AddPaymentMenuKeyboard(uuid string) Builder {
 	webAppButton :=
 		tg.NewKeyboardButtonWebApp("Открыть приложение",
 			tg.WebAppInfo{
@@ -86,4 +91,14 @@ func (b Builder) RemoveKeyboard() Builder {
 }
 func (b Builder) Build() *tg.SendMessageCall {
 	return b.sndMsg
+}
+func (b Builder) GetMainMenuKeyboad() tg.InlineKeyboardMarkup {
+	return tg.NewInlineKeyboardMarkup(
+		[]tg.InlineKeyboardButton{
+			{
+				Text:         "Моя ссылка",
+				CallbackData: "get_link",
+			},
+		})
+
 }

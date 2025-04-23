@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	"bot-service/internal/repository/http/vpn"
 	"bot-service/internal/singleton"
 	usrService "bot-service/internal/user"
-	"bot-service/internal/utils"
 	"context"
 	"errors"
 	"github.com/mr-linch/go-tg"
@@ -19,10 +19,11 @@ type MessageHandlerInterface interface {
 
 type MessageHandler struct {
 	userService usrService.ServiceInterface
+	vpnRepo     vpn.RepositoryInterface
 }
 
-func NewMessageHandler(userService usrService.ServiceInterface) *MessageHandler {
-	return &MessageHandler{userService: userService}
+func NewMessageHandler(userService usrService.ServiceInterface, vpnRepo vpn.RepositoryInterface) *MessageHandler {
+	return &MessageHandler{userService: userService, vpnRepo: vpnRepo}
 }
 
 type ContactFilter struct {
@@ -48,8 +49,11 @@ func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUp
 		if err != nil {
 			return err
 		}
-
-		return singleton.MessageBuilder().GetSuccessRegister(update, utils.BuildVlessLink(user.UUID)).AddRequestMainMenuKeyboard("POEBEN").RemoveKeyboard().Build().DoVoid(ctx)
+		link, err := h.vpnRepo.GetSubscriptionLinkByChatId(user.ChatId)
+		if err != nil {
+			return err
+		}
+		return singleton.MessageBuilder().GetSuccessRegister(update, link).AddRequestMainMenuKeyboard().RemoveKeyboard().Build().DoVoid(ctx)
 	}
 	if err != nil {
 		//todo нужно сказать пользователю, что у нас ошибка

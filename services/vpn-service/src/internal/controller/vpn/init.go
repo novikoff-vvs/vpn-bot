@@ -18,5 +18,6 @@ func registerApi(r *gin.RouterGroup, service vpn.ServiceInterface) {
 		vpnGroup.POST("/reset-traffic/:chatId", ResetTraffic(service))
 		vpnGroup.GET("/exists/:chatId", UserExists(service))
 		vpnGroup.GET("/by-email/:email", GetUserByEmail(service))
+		vpnGroup.GET("/subscription-link/:chatId", GetSubcLinkByChatId(service))
 	}
 }

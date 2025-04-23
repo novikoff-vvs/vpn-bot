@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 	"vpn-service/internal/service/vpn"
+	"vpn-service/internal/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -154,7 +155,7 @@ func UserExists(service vpn.ServiceInterface) gin.HandlerFunc {
 // @Param        email  path   string  true  "Email пользователя"
 // @Success      200   {object}  ShortUserResource
 // @Failure      404   {object}  gin.H
-// @Router       /vpn/by-email/{email} [get]
+// @Router       /vpn/exists/{chatId} [get]
 func GetUserByEmail(service vpn.ServiceInterface) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.Param("email")
@@ -168,6 +169,34 @@ func GetUserByEmail(service vpn.ServiceInterface) gin.HandlerFunc {
 			UUID:   user.UUID,
 			Email:  user.Email,
 			ChatId: user.ChatId,
+		})
+	}
+}
+
+type SubscriptionLinkResource struct {
+	SubscriptionLink string `json:"subscription_link"`
+}
+
+// GetSubcLinkByChatId godoc
+// @Summary      Получить ссылку на подписку
+// @Description  Возвращает ссылку на подписочную систему по пользователю
+// @Tags         vpn
+// @Produce      json
+// @Param        chatId  path   string  true  "chatId пользователя"
+// @Success      200   {object}  SubscriptionLinkResource
+// @Failure      404   {object}  gin.H
+// @Router       /vpn/subscription-link/{chatId}  [get]
+func GetSubcLinkByChatId(service vpn.ServiceInterface) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		chatId, err := strconv.ParseInt(c.Param("chatId"), 10, 64)
+		user, err := service.UserGetByChatId(chatId)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+		subscLink := utils.BuildVlessLink(user.UUID)
+		c.JSON(http.StatusOK, SubscriptionLinkResource{
+			SubscriptionLink: subscLink,
 		})
 	}
 }

@@ -14,10 +14,19 @@ type RepositoryInterface interface {
 	ResetTraffic(chatId int64) error
 	Exists(chatId int64) (bool, error)
 	GetUserByEmail(email string) (models.VpnUser, error)
+	GetSubscriptionLinkByChatId(chatId int64) (string, error)
 }
 
 type HTTPVPNUserRepository struct {
 	client *vpnclient.Client
+}
+
+func (r *HTTPVPNUserRepository) GetSubscriptionLinkByChatId(chatId int64) (string, error) {
+	response, err := r.client.GetSubcLinkByChatId(chatId)
+	if err != nil {
+		return "", err
+	}
+	return response.SubscriptionLink, nil
 }
 
 func NewHTTPVPNUserRepository(client *vpnclient.Client) *HTTPVPNUserRepository {

@@ -41,7 +41,7 @@ func main() {
 
 	userService := usrService.NewUserService(vpnRepo, userRepo)
 
-	service := bot.NewService(cfg.BotSettings.Token, userService)
+	service := bot.NewService(cfg.BotSettings.Token, userService, vpnRepo)
 	go func() {
 		err := service.Run()
 		if err != nil {

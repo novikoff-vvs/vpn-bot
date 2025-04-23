@@ -25,6 +25,10 @@ type GetVpnUserResponse struct {
 	ChatId int64  `json:"chat_id"`
 }
 
+type GetSubscriptionLinkResponse struct {
+	SubscriptionLink string `json:"subscription_link"`
+}
+
 type ExistsResponse struct {
 	Exists bool `json:"exists"`
 }
@@ -165,6 +169,33 @@ func (c Client) GetByEmail(email string) (*GetVpnUserResponse, error) {
 	}
 
 	return resp.Result().(*GetVpnUserResponse), nil
+}
+
+func (c Client) GetSubcLinkByChatId(chatId int64) (*GetSubscriptionLinkResponse, error) {
+	c.lg.Debug(fmt.Sprintf("Getting subscription link  by chat_id: %d", chatId))
+
+	resp, err := c.client.R().
+		SetHeader("Accept", "application/json").
+		SetResult(&GetSubscriptionLinkResponse{}).
+		Get(fmt.Sprintf("/vpn/subscription-link/%d", chatId))
+
+	if err != nil {
+		c.lg.Error("get by email request failed: " + err.Error())
+		return nil, err
+	}
+
+	if resp.StatusCode() == 404 {
+		c.lg.Info(fmt.Sprintf("User not found by chat_id: %d", chatId))
+		return nil, exceptions.ErrModelNotFound
+	}
+
+	if resp.IsError() {
+		errMsg := fmt.Sprintf("get by email error: %s", resp.String())
+		c.lg.Error(errMsg)
+		return nil, errors.New(errMsg)
+	}
+
+	return resp.Result().(*GetSubscriptionLinkResponse), nil
 }
 
 func (c Client) Close() error {
