@@ -27,10 +27,25 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push images
+        env:
+          BASE_IMAGE_NAME: ${{ github.event.inputs.base_image_name || 'vpn-bot' }}
+          TAG: ${{ github.event.inputs.tag || 'latest' }}
+          REGISTRY: ${{ secrets.DOCKER_REGISTRY || 'registry.novvs.ru' }}
         run: |
           SERVICES=("bot-service" "user-service" "payment-service" "vpn-service")
-          for SERVICE in "${SERVICES[@]}"; do
-            echo "Building $SERVICE"
-            docker build -f "Dockerfile-$SERVICE" -t "your-registry/$SERVICE:latest" .
-            docker push "your-registry/$SERVICE:latest"
+          for SERVICE_NAME in "${SERVICES[@]}"; do
+            IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
+          
+            echo "Building image for service $SERVICE_NAME..."
+            docker build \
+              --build-arg SERVICE_NAME="$SERVICE_NAME" \
+              -t "$REGISTRY/$IMAGE_NAME:$TAG" \
+              -f "Dockerfile-$SERVICE_NAME" \
+              .
+          
+            echo "Pushing image $REGISTRY/$IMAGE_NAME:$TAG..."
+            docker push "$REGISTRY/$IMAGE_NAME:$TAG"
+          
+            echo "Done for $SERVICE_NAME!"
+            echo "----------------------------"
           done
