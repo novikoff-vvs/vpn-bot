@@ -7,6 +7,7 @@ import (
 	"context"
 	"github.com/mr-linch/go-tg"
 	"github.com/mr-linch/go-tg/tgb"
+	"log"
 )
 
 type CallbackQueryHandlerInterface interface {
@@ -52,7 +53,7 @@ func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.Call
 		tg.HTML.Line(tg.HTML.Bold("🔗 Ваша подписка: "), tg.HTML.Link("SUBSCRIPTION-URL", link)),
 	)).
 		ParseMode(tg.HTML))
-
+	log.Println(err)
 	return update.
 		Client.
 		SendMessage(update.CallbackQuery.From.ID, "Чем еще могу помочь?").
