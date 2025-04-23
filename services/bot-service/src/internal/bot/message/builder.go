@@ -1,19 +1,24 @@
 package message
 
 import (
+	"bot-service/config"
+	"fmt"
 	"github.com/mr-linch/go-tg"
-	"github.com/mr-linch/go-tg/tgb"
 )
 
 type message interface {
 	Answer(text string) *tg.SendMessageCall
 }
+
 type Builder struct {
 	sndMsg *tg.SendMessageCall
+	cfg    config.PaymentService
 }
 
-func NewSendMessageCallBuilder() *Builder {
-	return &Builder{}
+func NewSendMessageCallBuilder(cfg config.PaymentService) *Builder {
+	return &Builder{
+		cfg: cfg,
+	}
 }
 func (b Builder) GetFirstMessage(msg message) Builder {
 	b.sndMsg = msg.Answer(
@@ -47,10 +52,6 @@ func (b Builder) GetVessaLinkMessage(msg message, vessaLink string) Builder {
 	b.sndMsg = msg.Answer(tg.HTML.Line(tg.HTML.Bold("🔗 Ваша подписка: "), tg.HTML.Link("SUBSCRIPTION-URL", vessaLink)))
 	return b
 }
-func (b Builder) GetVessaCallbackQueryLinkMessage(msg *tgb.CallbackQueryUpdate, vessaLink string) Builder {
-
-	return b
-}
 func (b Builder) GetCustomMessage(msg *tg.SendMessageCall) Builder {
 	b.sndMsg = msg
 	return b
@@ -65,15 +66,18 @@ func (b Builder) AddRequestContactKeyboard() Builder {
 	return b
 }
 func (b Builder) AddRequestMainMenuKeyboard() Builder {
-	// Создаем кнопку для открытия WebApp
+
+	b.sndMsg.ReplyMarkup(b.GetMainMenuKeyboad())
+	return b
+}
+func (b Builder) AddPaymentMenuKeyboard(uuid string) Builder {
 	webAppButton :=
 		tg.NewKeyboardButtonWebApp("Открыть приложение",
 			tg.WebAppInfo{
-				URL: "https://nvs-proxy.ru/?user_id=", // Замените на URL вашего WebApp
+				URL: fmt.Sprintf("%sweb/yoomoney/%s", b.cfg.Url, uuid), // Замените на URL вашего WebApp
 
 			})
 
-	// Создаем клавиатуру с кнопкой
 	replyMarkup := tg.NewReplyKeyboardMarkup(
 		[]tg.KeyboardButton{webAppButton},
 	).WithResizeKeyboardMarkup()
@@ -87,4 +91,14 @@ func (b Builder) RemoveKeyboard() Builder {
 }
 func (b Builder) Build() *tg.SendMessageCall {
 	return b.sndMsg
+}
+func (b Builder) GetMainMenuKeyboad() tg.InlineKeyboardMarkup {
+	return tg.NewInlineKeyboardMarkup(
+		[]tg.InlineKeyboardButton{
+			{
+				Text:         "Моя ссылка",
+				CallbackData: "get_link",
+			},
+		})
+
 }

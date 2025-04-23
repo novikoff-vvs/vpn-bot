@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"bot-service/internal/bot/message"
+	"bot-service/internal/singleton"
 	usrService "bot-service/internal/user"
 	"context"
 	"errors"
@@ -33,11 +33,11 @@ func (h CommandHandler) StartCommandHandle(ctx context.Context, msg *tgb.Message
 	var err error
 	_, err = h.userService.UserGetByChatId(int64(msg.Chat.ID))
 	if errors.Is(err, exceptions.ErrModelNotFound) {
-		return message.NewSendMessageCallBuilder().GetFirstMessage(msg).AddRequestContactKeyboard().Build().DoVoid(ctx)
+		return singleton.MessageBuilder().GetFirstMessage(msg).AddRequestContactKeyboard().Build().DoVoid(ctx)
 	}
 	if err != nil {
 		return err
 	}
 
-	return message.NewSendMessageCallBuilder().GetReturnMessage(msg).Build().DoVoid(ctx)
+	return singleton.MessageBuilder().GetReturnMessage(msg).AddRequestMainMenuKeyboard().Build().DoVoid(ctx)
 }

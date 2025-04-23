@@ -57,7 +57,7 @@ func main() {
 		docs.SwaggerInfo.Title = "User Service"
 		docs.SwaggerInfo.Description = "Сервис пользователей"
 		docs.SwaggerInfo.Version = "1.0"
-		docs.SwaggerInfo.Host = "localhost:22822"
+		docs.SwaggerInfo.Host = fmt.Sprintf("localhost:%s", cfg.Base.AppPort)
 		docs.SwaggerInfo.BasePath = "/api"
 		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 

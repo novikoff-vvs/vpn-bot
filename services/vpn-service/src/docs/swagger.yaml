@@ -1,0 +1,123 @@
+definitions:
+  vpn.CreateRequest:
+    properties:
+      chat_id:
+        type: integer
+      email:
+        type: string
+      uuid:
+        type: string
+    type: object
+  vpn.CreateResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  vpn.ShortUserResource:
+    properties:
+      chat_id:
+        type: integer
+      email:
+        type: string
+      uuid:
+        type: string
+    type: object
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  license:
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+paths:
+  /vpn/by-chat/{chatId}:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию о VPN-пользователе по его Telegram Chat ID
+      parameters:
+      - description: Chat ID пользователя
+        in: path
+        name: chatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о пользователе
+          schema:
+            $ref: '#/definitions/vpn.ShortUserResource'
+        "400":
+          description: 'Неверный формат Chat ID" example({"error": "invalid chat id"})'
+          schema:
+            type: object
+        "404":
+          description: 'Пользователь не найден" example({"error": "user not found"})'
+          schema:
+            type: object
+      summary: Получить пользователя VPN по Chat ID
+      tags:
+      - vpn
+  /vpn/register:
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя VPN и добавляет его в прокси-сервер
+      parameters:
+      - description: Данные нового пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/vpn.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Пользователь успешно зарегистрирован
+          schema:
+            $ref: '#/definitions/vpn.CreateResponse'
+        "400":
+          description: 'Неверный формат запроса"  example({"error": "invalid request"})'
+          schema:
+            type: object
+        "500":
+          description: 'Ошибка сервера"            example({"error": "internal server
+            error"})'
+          schema:
+            type: object
+      summary: Зарегистрировать пользователя VPN
+      tags:
+      - vpn
+  /vpn/reset-traffic/{chatId}:
+    post:
+      consumes:
+      - application/json
+      description: Обнуляет трафик VPN-пользователя по его Chat ID
+      parameters:
+      - description: Chat ID пользователя
+        in: path
+        name: chatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Трафик успешно сброшен" example({"message": "traffic reset
+            successfully"})'
+          schema:
+            type: object
+        "400":
+          description: 'Неверный формат Chat ID" example({"error": "invalid chat id"})'
+          schema:
+            type: object
+        "500":
+          description: 'Ошибка сервера" example({"error": "internal server error"})'
+          schema:
+            type: object
+      summary: Сбросить трафик пользователя
+      tags:
+      - vpn
+swagger: "2.0"

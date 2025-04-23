@@ -3,15 +3,18 @@ logger:
   name: "vpn-bot"
   is_output: false
 
-vpn_service:
-  base_url:
-  username:
-  password:
-  inbound_id:
-
 user_service:
-  url: http://localhost:22822/api
+  url:
+
+vpn_service:
+  url:
+
+payment_service:
+  url:
 
 bot_settings:
   token:
+
+base:
+  app_port:
 

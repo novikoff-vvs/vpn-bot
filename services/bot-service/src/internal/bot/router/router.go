@@ -2,6 +2,7 @@ package router
 
 import (
 	"bot-service/internal/bot/handlers"
+	"context"
 	"github.com/mr-linch/go-tg/tgb"
 )
 
@@ -29,16 +30,27 @@ func (r Router) RegisterReactionHandlers(handler handlers.ReactionHandlerInterfa
 	r.router.MessageReaction(handler.GetReactionHandleFunc(), nil)
 }
 
+type Filter struct {
+	data string
+}
+
+func (f Filter) Allow(ctx context.Context, update *tgb.Update) (bool, error) {
+	if update.Update.CallbackQuery.Data == f.data {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (r Router) RegisterCallbackQueryHandlers(handler handlers.CallbackQueryHandlerInterface) {
 	for data, fn := range handler.GetCallbackQueryHandlersFunc() {
-		_ = tgb.NewCallbackDataFilter[string](
-			data,
-			tgb.WithCallbackDataCodecDelimiter(0),
-		).
-			Filter()
+
+		filters := Filter{
+			data: data,
+		}
 		r.router.
 			CallbackQuery(
 				fn,
+				filters,
 			)
 	}
 

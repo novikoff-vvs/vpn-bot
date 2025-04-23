@@ -1,0 +1,35 @@
+ARG SERVICE_NAME=user_service
+FROM --platform=linux/amd64 golang:1.23-alpine3.21 as build
+ARG SERVICE_NAME
+
+WORKDIR /app
+
+# Устанавливаем зависимые утилиты
+RUN apk --no-cache --update add build-base
+
+# Копируем весь контекст
+COPY ./services .
+
+# Переход в нужный сервис
+WORKDIR /app/${SERVICE_NAME}/src
+
+# Скачиваем зависимости (используем go.work)
+RUN go mod download
+
+# Сборка
+RUN go build -o /app/dist/application ./cmd/main.go
+
+
+# Финальный stage
+FROM --platform=linux/amd64 alpine
+
+USER nobody
+
+ARG SERVICE_NAME
+
+COPY --from=build --chown=nobody:nobody /app/dist/application /app/application
+COPY --from=build --chown=nobody:nobody /app/${SERVICE_NAME}/configs /app/configs
+
+WORKDIR /app
+
+ENTRYPOINT ["/app/application"]

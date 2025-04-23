@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+type UserService struct {
+	Url string `mapstructure:"url"`
+}
+
+type VpnService struct {
+	Url string `mapstructure:"url"`
+}
+
 func GetViper() *viper.Viper {
 	// 1. Загружаем .env (опционально, если не используется в Docker/K8s)
 	if err := godotenv.Load(); err != nil {
