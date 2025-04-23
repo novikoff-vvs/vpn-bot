@@ -5,9 +5,10 @@ import (
 )
 
 type Config struct {
-	Logger     Logger `mapstructure:"logger"`
-	VpnService Xui    `mapstructure:"vpn_service"`
-	Base       Base   `mapstructure:"base"`
+	Logger      Logger                 `mapstructure:"logger"`
+	Xui         Xui                    `mapstructure:"xui"`
+	Base        Base                   `mapstructure:"base"`
+	UserService pkg_config.UserService `mapstructure:"user_service"`
 }
 
 type Logger struct {

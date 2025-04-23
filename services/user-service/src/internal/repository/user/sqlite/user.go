@@ -63,7 +63,7 @@ func (r *UserRepository) GetByChatId(chatId int64) (*models.User, error) {
 		tx = r.dbService.DB()
 	}
 
-	err := tx.First(&user).Error
+	err := tx.Where("chat_id = ?", chatId).First(&user).Error
 	if errors.Is(err, grm.ErrRecordNotFound) {
 		return nil, nil
 	}

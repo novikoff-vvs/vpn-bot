@@ -2,16 +2,15 @@ package config
 
 import (
 	"log"
-	"pkg/config"
 	pkg_config "pkg/config"
 )
 
 type Config struct {
-	Logger         Logger             `mapstructure:"logger"`
-	VpnService     config.VpnService  `mapstructure:"vpn_service"`
-	BotSettings    BotSettings        `mapstructure:"bot_settings"`
-	UserService    config.UserService `mapstructure:"user_service"`
-	PaymentService PaymentService     `mapstructure:"payment_service"`
+	Logger         Logger                 `mapstructure:"logger"`
+	VpnService     pkg_config.VpnService  `mapstructure:"vpn_service"`
+	BotSettings    BotSettings            `mapstructure:"bot_settings"`
+	UserService    pkg_config.UserService `mapstructure:"user_service"`
+	PaymentService PaymentService         `mapstructure:"payment_service"`
 }
 
 type Logger struct {

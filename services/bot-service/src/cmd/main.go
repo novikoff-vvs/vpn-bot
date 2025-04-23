@@ -56,9 +56,7 @@ func main() {
 		Type:   zapcore.StringType,
 		String: "Bot-service",
 	})
-	select {
-	case <-ch:
-	}
+	<-ch
 	lg.Info("Bot-service down", zap.Field{
 		Key:    "service",
 		Type:   zapcore.StringType,

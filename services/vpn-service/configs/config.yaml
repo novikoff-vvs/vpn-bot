@@ -3,11 +3,14 @@ logger:
   name: "vpn-bot"
   is_output: false
 
-vpn_service:
+xui:
   base_url:
   username:
   password:
   inbound_id:
+
+user_service:
+  url:
 
 base:
   app_port:

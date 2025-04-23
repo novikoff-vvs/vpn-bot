@@ -19,6 +19,7 @@ type ServiceInterface interface {
 	UserGetByChatId(chatId int64) (models.VpnUser, error)
 	UserGetByEmail(email string) (models.VpnUser, error)
 	ResetClientTraffic(chatId int64) error
+	GetAllUsers() ([]models.VpnUser, error)
 }
 
 type Service struct {
@@ -122,6 +123,31 @@ func (s Service) UserGetByEmail(email string) (models.VpnUser, error) {
 		return models.VpnUser{}, err
 	}
 	return models.VpnUser{}, nil
+}
+
+func (s Service) GetAllUsers() ([]models.VpnUser, error) {
+	var result []models.VpnUser
+	inbound, err := s.client.GetInbound(s.cfg.InboundID)
+	if err != nil {
+		s.lg.Error(err.Error())
+		return result, err
+	}
+
+	for _, client := range inbound.GetSettings().Clients {
+		id, err := client.TgId.Int64()
+		if err != nil {
+			s.lg.Error(err.Error())
+		}
+		user := models.VpnUser{
+			ChatId:         id,
+			Email:          client.Email,
+			UUID:           client.Id,
+			SubscriptionId: client.SubId,
+		}
+		result = append(result, user)
+	}
+
+	return result, nil
 }
 
 func NewVPNService(cfg config.Xui, lg logger.Interface) (*Service, error) {

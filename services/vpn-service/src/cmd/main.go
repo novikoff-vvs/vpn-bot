@@ -6,9 +6,11 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"pkg/infrastructure/http"
+	"pkg/singleton"
 	"vpn-service/config"
 	"vpn-service/docs"
 	"vpn-service/internal/controller/vpn"
+	"vpn-service/internal/cron"
 	vpn2 "vpn-service/internal/service/vpn"
 )
 
@@ -34,11 +36,17 @@ func main() {
 	}
 	LoggingService.Info("Initializing app")
 
-	vpnService, err := vpn2.NewVPNService(cfg.VpnService, LoggingService)
+	vpnService, err := vpn2.NewVPNService(cfg.Xui, LoggingService)
 	if err != nil {
 		return
 	}
+	singleton.UserClientBoot(cfg.UserService)
 
+	worker, err := cron.NewWorker(vpnService, singleton.UserClient(), LoggingService)
+	if err != nil {
+		panic(err)
+	}
+	worker.Start()
 	s := http.NewServer(LoggingService)
 
 	if cfg.Base.Swagger {
