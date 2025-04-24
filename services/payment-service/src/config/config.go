@@ -5,13 +5,19 @@ import (
 )
 
 type Config struct {
-	Logger Logger `mapstructure:"logger"`
+	Logger      Logger                 `mapstructure:"logger"`
+	Base        Base                   `mapstructure:"base"`
+	UserService pkg_config.UserService `mapstructure:"user_service"`
 }
 
 type Logger struct {
 	Path     string `mapstructure:"path"`
 	Name     string `mapstructure:"name"`
 	IsOutput bool   `mapstructure:"is_output"`
+}
+
+type Base struct {
+	AppPort string `mapstructure:"app_port"`
 }
 
 func LoadConfigs() (*Config, error) {

@@ -10,7 +10,10 @@ vpn_service:
   inbound_id:
 
 user_service:
-  url: http://localhost:22822/api
+  url:
+
+base:
+  app_port: 8080
 
 bot_settings:
   token:

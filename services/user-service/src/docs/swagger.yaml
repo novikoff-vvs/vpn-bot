@@ -13,7 +13,7 @@ definitions:
       user_id:
         type: string
     type: object
-  user.GetUserResponse:
+  user.GetShortUserResponse:
     properties:
       user:
         $ref: '#/definitions/user.ShortUserResource'
@@ -53,7 +53,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/user.GetUserResponse'
+            $ref: '#/definitions/user.GetShortUserResponse'
         "400":
           description: 'Неверный запрос"  example({"error": "invalid request"})'
           schema:
@@ -68,6 +68,40 @@ paths:
           schema:
             type: object
       summary: Получить пользователя
+      tags:
+      - user
+  /user/{uuid}/short:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает укороченную информацию о пользователе по его UUID
+      parameters:
+      - description: UUID пользователя
+        in: path
+        name: uuid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.GetShortUserResponse'
+        "400":
+          description: 'Неверный запрос"  example({"error": "invalid request"})'
+          schema:
+            type: object
+        "404":
+          description: 'Пользователь не найден" "{"error": "user not found"}" example(string)'
+          schema:
+            type: object
+        "500":
+          description: 'Внутренняя ошибка сервера"  example({"error": "internal server
+            error"})'
+          schema:
+            type: object
+      summary: Получить укороченную информацию о пользователе
       tags:
       - user
   /user/by-chat/{chatId}:

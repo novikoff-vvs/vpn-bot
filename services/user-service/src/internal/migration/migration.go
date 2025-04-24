@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"user-service/config"
 	"user-service/internal/models"
+	"user-service/internal/seeds"
 )
 
 func InitDBConnection(cfg config.Database) (*gorm.DB, error) {
@@ -15,9 +16,15 @@ func InitDBConnection(cfg config.Database) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.User{}, &models.Subscription{})
+	err = db.AutoMigrate(&models.User{}, &models.Subscription{}, &models.Plan{})
 	if err != nil {
 		return nil, err
 	}
+
+	// Добавим тарифы, если они ещё не добавлены
+	if err := seeds.SeedPlans(db); err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }

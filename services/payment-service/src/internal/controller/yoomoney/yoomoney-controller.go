@@ -1,8 +1,13 @@
 package yoomoney
 
 import (
+	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"pkg/exceptions"
+	"pkg/infrastructure/client/user"
+	response2 "pkg/infrastructure/client/user/response"
 	"time"
 )
 
@@ -127,24 +132,35 @@ type yoomoneyLogRequest struct {
 //	c.JSON(http.StatusOK, gin.H{})
 //}
 
-type UserPayment struct {
-}
+func paymentForm(client *user.Client) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uuid := c.Param("uuid")
+		//var payment UserPayment
+		//uuid := c.DefaultQuery("uuid", "null")
+		//DB.Model(&UserPayment{}).Preload(clause.Associations).Where("uuid = ?", uuid).First(&payment)
+		//
+		//if payment.IsPaid {
+		//	c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is paid"})
+		//}
+		response, err := client.GetUserByUUID(user.GetUserByUUIDRequest{UUID: uuid})
+		if errors.Is(exceptions.ErrModelNotFound, err) {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		var result response2.GetUserByUUIDResponse
 
-func paymentForm(c *gin.Context) {
-	uuid := c.Param("uuid")
-	//var payment UserPayment
-	//uuid := c.DefaultQuery("uuid", "null")
-	//DB.Model(&UserPayment{}).Preload(clause.Associations).Where("uuid = ?", uuid).First(&payment)
-	//
-	//if payment.IsPaid {
-	//	c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is paid"})
-	//}
+		err = json.Unmarshal(response.Bytes(), &result)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 
-	c.HTML(http.StatusOK, "payload.html", gin.H{
-		"label":   "huisossi", // Данные для передачи в шаблон
-		"tg_name": uuid,
-		"amount":  200,
-	})
+		c.HTML(http.StatusOK, "payload.html", gin.H{
+			"label":   result.Result.User.UUID, // Данные для передачи в шаблон
+			"tg_name": result.Result.User.Email,
+			"amount":  result.Result.User.Subscription.Plan.Price,
+		})
+	}
 }
 
 //func indexYoomoney(c *gin.Context) {

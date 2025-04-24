@@ -18,6 +18,10 @@ type GetUserByChatIdRequest struct {
 	ChatId int64 `json:"chat_id"`
 }
 
+type GetUserByUUIDRequest struct {
+	UUID string `json:"uuid"`
+}
+
 type Client struct {
 	client *resty.Client
 	cfg    config.UserService
@@ -41,6 +45,27 @@ func (c Client) GetByChatID(req GetUserByChatIdRequest) (*resty.Response, error)
 		SetBody(req).
 		SetHeader("Accept", "application/json").
 		Get(fmt.Sprintf("user/by-chat/%d", req.ChatId))
+
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode() == 404 {
+		return nil, exceptions.ErrModelNotFound
+	}
+
+	if response.IsError() {
+		return nil, fmt.Errorf("unexpected status: %d, body: %s", response.StatusCode(), response.String())
+	}
+
+	return response, nil
+}
+func (c Client) GetUserByUUID(req GetUserByUUIDRequest) (*resty.Response, error) {
+	// TODO: добавить логирование
+	response, err := c.client.R().
+		SetBody(req).
+		SetHeader("Accept", "application/json").
+		Get(fmt.Sprintf("user/%s", req.UUID))
 
 	if err != nil {
 		return nil, err
