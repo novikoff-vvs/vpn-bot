@@ -31,7 +31,7 @@ func (s *Service) Run() error {
 	r := router2.NewRouter(router)
 	commandH := handlers.NewCommandHandler(s.userService)
 	reactionH := handlers.NewReactionHandler(s.bot)
-	callbackQueryH := handlers.NewCallbackQueryHandler(s.userService, s.vpnRepo)
+	callbackQueryH := handlers.NewCallbackQueryHandler(s.userService, s.vpnRepo, s.bot)
 	messageH := handlers.NewMessageHandler(s.userService, s.vpnRepo)
 
 	r.RegisterCommandHandlers(commandH)

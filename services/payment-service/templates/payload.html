@@ -1,30 +1,28 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Оплата через YooMoney</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f7f9fc;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #e0e5ec;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            box-sizing: border-box;
         }
 
         .container {
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
-            width: 100%;
+            background: #e0e5ec;
+            border-radius: 20px;
+            box-shadow: 10px 10px 30px #babecc, -10px -10px 30px #ffffff;
+            padding: 40px;
             max-width: 500px;
-            padding: 30px;
-            box-sizing: border-box;
+            width: 100%;
             text-align: center;
         }
 
@@ -35,70 +33,62 @@
         }
 
         p {
-            color: #555;
             font-size: 16px;
+            color: #555;
             margin-bottom: 30px;
         }
 
         form {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 20px;
+        }
+
+        .form-group {
+            background: #e0e5ec;
+            border-radius: 10px;
+            box-shadow: inset 5px 5px 10px #babecc, inset -5px -5px 10px #ffffff;
+            padding: 20px;
         }
 
         label {
+            display: block;
             font-size: 16px;
             color: #333;
+            margin-bottom: 10px;
             text-align: left;
             cursor: pointer;
         }
 
         input[type="radio"] {
             margin-right: 10px;
+            transform: scale(1.2);
         }
 
         input[type="submit"] {
             padding: 12px;
             font-size: 18px;
             color: #fff;
-            background: rgb(80,255,252);
-            background: linear-gradient(90deg, rgba(80,255,252,1) 0%, rgba(158,51,247,1) 100%);
+            background: linear-gradient(145deg, #9e9cf5, #8e8cf1);
             border: none;
-            border-radius: 5px;
+            border-radius: 30px;
+            box-shadow: 5px 5px 15px #babecc, -5px -5px 15px #ffffff;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
         }
 
         input[type="submit"]:hover {
-            background: rgb(57, 180, 177);
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .form-group input[type="number"], .form-group input[type="text"] {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            width: 100%;
-            margin-top: 5px;
-        }
-
-        .form-group input[type="radio"] {
-            margin-right: 10px;
+            background: linear-gradient(145deg, #8e8cf1, #9e9cf5);
         }
 
         .footer {
-            margin-top: 20px;
+            margin-top: 30px;
             font-size: 14px;
             color: #777;
         }
 
         .footer a {
-            color: #4caf50;
+            color: #6c63ff;
             text-decoration: none;
         }
 
@@ -109,15 +99,58 @@
         /* Адаптивность */
         @media (max-width: 600px) {
             .container {
-                padding: 20px;
+                padding: 25px;
+                margin: 0 15px;
+                border-radius: 16px;
+                box-shadow: 6px 6px 20px #babecc, -6px -6px 20px #ffffff;
             }
 
             h1 {
                 font-size: 20px;
             }
 
+            p {
+                font-size: 14px;
+            }
+
             input[type="submit"] {
                 font-size: 16px;
+                padding: 10px;
+            }
+
+            .form-group {
+                padding: 15px;
+            }
+
+            label {
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .container {
+                padding: 20px;
+                margin: 0 10px;
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            input[type="submit"] {
+                font-size: 14px;
+            }
+
+            .footer {
+                font-size: 12px;
+            }
+
+            .form-group {
+                padding: 10px;
+            }
+
+            label {
+                font-size: 13px;
             }
         }
     </style>
@@ -127,24 +160,26 @@
     <h1>Оплата через ЮMoney</h1>
     <p>Для завершения транзакции выберите метод оплаты и нажмите кнопку "Перевести".</p>
 
-
     <form method="POST" action="https://yoomoney.ru/quickpay/confirm">
-        <!-- Скрытые поля -->
-        <input type="hidden" name="receiver" value="410011890678722"/>
-        <input type="hidden" name="label" value="{{ .label }}"/>
-        <input type="hidden" name="quickpay-form" value="button"/>
-        <input type="hidden" name="sum" value="{{.amount}}" data-type="number"/>
+        <input type="hidden" name="receiver" value="410011890678722" />
+        <input type="hidden" name="label" value="{{ .label }}" />
+        <input type="hidden" name="quickpay-form" value="button" />
+        <input type="hidden" name="sum" value="{{.amount}}" data-type="number" />
 
         <div class="form-group">
             <label>
-                <input type="radio" name="paymentType" value="PC" required/> ЮMoney
+                <input type="radio" name="paymentType" value="PC" required /> ЮMoney
             </label>
             <label>
-                <input type="radio" name="paymentType" value="AC" required/> Банковской картой
+                <input type="radio" name="paymentType" value="AC" required /> Банковской картой
             </label>
         </div>
-        <p style="font-size:10px;margin: 0; ">Форма оплаты пользователя: <strong>{{ .tg_name }}</strong><br>(Проверьте, что это вы)</p>
-        <input type="submit" value="Перевести"/>
+
+        <p style="font-size:10px;margin: 0;">
+            Аккаунт: <strong>{{ .tg_name }}</strong><br/>(Проверьте, что это вы)
+        </p>
+
+        <input type="submit" value="Перевести" />
     </form>
 
     <div class="footer">

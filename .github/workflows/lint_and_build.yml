@@ -49,22 +49,3 @@ jobs:
             echo "Done for $SERVICE_NAME!"
             echo "----------------------------"
           done
-
-  deploy:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build-and-push  # Зависит от успешного выполнения build-and-push
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'  # Только для main/master веток
-    steps:
-      - name: SSH Deploy
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo "Starting deployment..."
-            cd /path/to/your/project
-            docker compose pull
-            docker compose up -d --build --force-recreate
-            echo "Deployment completed successfully!"
