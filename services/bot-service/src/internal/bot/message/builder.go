@@ -70,7 +70,7 @@ func (b Builder) AddRequestMainMenuKeyboard() Builder {
 	b.sndMsg.ReplyMarkup(b.GetMainMenuKeyboad())
 	return b
 }
-func (b Builder) AddPaymentMenuKeyboard(uuid string) Builder {
+func (b Builder) GetPaymentMenuKeyboard(uuid string) *tg.ReplyKeyboardMarkup {
 	webAppButton :=
 		tg.NewKeyboardButtonWebApp("Открыть приложение",
 			tg.WebAppInfo{
@@ -82,8 +82,7 @@ func (b Builder) AddPaymentMenuKeyboard(uuid string) Builder {
 		[]tg.KeyboardButton{webAppButton},
 	).WithResizeKeyboardMarkup()
 
-	b.sndMsg.ReplyMarkup(replyMarkup)
-	return b
+	return replyMarkup
 }
 func (b Builder) RemoveKeyboard() Builder {
 	b.sndMsg = b.sndMsg.ReplyMarkup(tg.NewReplyKeyboardRemove())
@@ -96,8 +95,12 @@ func (b Builder) GetMainMenuKeyboad() tg.InlineKeyboardMarkup {
 	return tg.NewInlineKeyboardMarkup(
 		[]tg.InlineKeyboardButton{
 			{
-				Text:         "Моя ссылка",
+				Text:         "🔗 Моя ссылка",
 				CallbackData: "get_link",
+			},
+			{
+				Text:         "💸 Оплата",
+				CallbackData: "payment",
 			},
 		})
 

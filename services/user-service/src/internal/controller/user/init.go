@@ -20,7 +20,8 @@ func registerApi(r *gin.RouterGroup, userService *user.Service) {
 		group.POST("/create", Create(userService))
 		groupByUUID := group.Group(":uuid")
 		{
-			groupByUUID.GET("", GetUser(userService))
+			groupByUUID.GET("/short", GetShortUser(userService))
+			groupByUUID.GET("/", GetUser(userService))
 		}
 
 		groupByChatId := group.Group("by-chat")

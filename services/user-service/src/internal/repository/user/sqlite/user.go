@@ -48,7 +48,10 @@ func (r *UserRepository) GetByUUID(uuid string) (*models.User, error) {
 		tx = r.dbService.DB()
 	}
 
-	if err := tx.First(&user).Error; err != nil {
+	if err := tx.
+		Preload("Subscription").
+		Preload("Subscription.Plan").
+		First(&user).Error; err != nil {
 		return nil, err
 	}
 	return &user, nil

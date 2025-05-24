@@ -145,7 +145,57 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/user.GetUserResponse"
+                            "$ref": "#/definitions/user.GetShortUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос\"  example({\"error\": \"invalid request\"})",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден\" \"{\"error\": \"user not found\"}\" example(string)",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера\"  example({\"error\": \"internal server error\"})",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{uuid}/short": {
+            "get": {
+                "description": "Возвращает укороченную информацию о пользователе по его UUID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Получить укороченную информацию о пользователе",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID пользователя",
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/user.GetShortUserResponse"
                         }
                     },
                     "400": {
@@ -193,7 +243,7 @@ const docTemplate = `{
                 }
             }
         },
-        "user.GetUserResponse": {
+        "user.GetShortUserResponse": {
             "type": "object",
             "properties": {
                 "user": {

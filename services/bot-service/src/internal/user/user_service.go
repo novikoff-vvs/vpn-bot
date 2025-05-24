@@ -3,6 +3,7 @@ package user
 import (
 	usrRepo "bot-service/internal/repository/http/user"
 	"bot-service/internal/repository/http/vpn"
+	"bot-service/internal/singleton"
 	"errors"
 	"github.com/google/uuid"
 	"pkg/exceptions"
@@ -50,18 +51,23 @@ func (u Service) UserRegisterByChatId(chatId int64, comment, phone string) (mode
 }
 
 func (u Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
-	user, err := u.userRepo.GetUserByChatId(chatId)
-	if err == nil {
-		return user, nil
-	}
+	var err error
+	var user models.VpnUser
+	cachedUser, ok := singleton.UserContainer().Get(chatId)
+	user = cachedUser.User
+	if !ok {
+		user, err = u.userRepo.GetUserByChatId(chatId)
+		if err == nil {
+			return user, nil
+		}
 
-	user, err = u.vpnService.GetUserByChatId(chatId)
-	if err == nil {
-		return user, nil
-	}
-
-	if errors.Is(err, exceptions.ErrModelNotFound) {
-		return models.VpnUser{}, err
+		user, err = u.vpnService.GetUserByChatId(chatId)
+		if err == nil {
+			return user, nil
+		}
+		if errors.Is(err, exceptions.ErrModelNotFound) {
+			return models.VpnUser{}, err
+		}
 	}
 
 	return models.VpnUser{}, err

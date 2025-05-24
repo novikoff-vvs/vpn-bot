@@ -25,8 +25,12 @@ type ShortUserResource struct {
 	ChatId int64  `json:"chat_id"`
 }
 
-type GetUserResponse struct {
+type GetShortUserResponse struct {
 	User ShortUserResource `json:"user"`
+}
+
+type GetUserResponse struct {
+	User models.User `json:"user"`
 }
 
 type GetUserRequest struct {
@@ -73,6 +77,44 @@ func Create(userService *user.Service) gin.HandlerFunc {
 	}
 }
 
+// GetShortUser godoc
+// @Summary      Получить укороченную информацию о пользователе
+// @Description  Возвращает укороченную информацию о пользователе по его UUID
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        uuid  path  string  true  "UUID пользователя"
+// @Success      200  {object}  GetShortUserResponse
+// @Failure      400  {object}  object  "Неверный запрос"  example({"error": "invalid request"})
+// @Failure      404  {object}  object  "Пользователь не найден" "{"error": "user not found"}" example(string)
+// @Failure      500  {object}  object  "Внутренняя ошибка сервера"  example({"error": "internal server error"})
+// @Router       /user/{uuid}/short [get]
+func GetShortUser(userService *user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		uuid := c.Param("uuid")
+		if uuid == "" {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "uuid is required"})
+			return
+		}
+
+		u, err := userService.GetByUUID(uuid)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		response := GetShortUserResponse{
+			User: ShortUserResource{
+				UUID:   u.UUID,
+				Email:  u.Email,
+				ChatId: u.ChatId,
+			},
+		}
+
+		c.JSON(http.StatusOK, gin.H{"result": response})
+	}
+}
+
 // GetUser godoc
 // @Summary      Получить пользователя
 // @Description  Возвращает информацию о пользователе по его UUID
@@ -80,7 +122,7 @@ func Create(userService *user.Service) gin.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        uuid  path  string  true  "UUID пользователя"
-// @Success      200  {object}  GetUserResponse
+// @Success      200  {object}  GetShortUserResponse
 // @Failure      400  {object}  object  "Неверный запрос"  example({"error": "invalid request"})
 // @Failure      404  {object}  object  "Пользователь не найден" "{"error": "user not found"}" example(string)
 // @Failure      500  {object}  object  "Внутренняя ошибка сервера"  example({"error": "internal server error"})
@@ -100,11 +142,7 @@ func GetUser(userService *user.Service) gin.HandlerFunc {
 		}
 
 		response := GetUserResponse{
-			User: ShortUserResource{
-				UUID:   u.UUID,
-				Email:  u.Email,
-				ChatId: u.ChatId,
-			},
+			User: *u,
 		}
 
 		c.JSON(http.StatusOK, gin.H{"result": response})

@@ -5,6 +5,7 @@ import (
 	"log"
 	"payment-service/config"
 	"payment-service/internal/controller/yoomoney"
+	"pkg/infrastructure/client/user"
 	"pkg/infrastructure/http"
 )
 
@@ -18,10 +19,12 @@ func main() {
 		log.Println(err.Error())
 		return
 	}
+
+	client := user.NewUserClient(cfg.UserService)
 	server := http.NewServer(lg)
 	server.RegisterStatic()
-	yoomoney.RegisterRoutes(server)
-	err = server.Run("1122")
+	yoomoney.RegisterRoutes(server, client)
+	err = server.Run(cfg.Base.AppPort)
 	if err != nil {
 		lg.Error(err.Error())
 		return

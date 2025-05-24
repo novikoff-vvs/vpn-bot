@@ -32,7 +32,7 @@ func (s Service) CreateUser(user *models.User) (string, error) {
 	}
 	var subscription = models.Subscription{
 		UserUUID:  uuid,
-		Type:      models.TEST_TYPE,
+		PlanCode:  models.SubscriptionTestCode,
 		StartedAt: time.Now(),
 		ExpiresAt: time.Now().AddDate(0, 0, 1),
 		IsActive:  true,
