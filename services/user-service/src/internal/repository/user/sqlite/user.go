@@ -39,6 +39,18 @@ func (r *UserRepository) Create(user *models.User) (string, error) {
 	return user.UUID, nil
 }
 
+func (r *UserRepository) Activate(user *models.User) (string, error) {
+	tx := r.dbService.ActiveTx()
+	if tx == nil {
+		tx = r.dbService.DB()
+	}
+
+	if err := tx.Unscoped().Model(user).Update("deleted_at", nil).Error; err != nil {
+		return "", err
+	}
+	return user.UUID, nil
+}
+
 func (r *UserRepository) GetByUUID(uuid string) (*models.User, error) {
 	var user models.User
 	user.UUID = uuid
@@ -74,6 +86,28 @@ func (r *UserRepository) GetByChatId(chatId int64) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *UserRepository) GetAllUUIDs(uuids []string) (error, []string) {
+	var existingUUIDs []string
+	return r.dbService.DB().
+		Model(&models.User{}).
+		Where("uuid NOT IN ?", uuids).
+		Pluck("uuid", &existingUUIDs).Error, existingUUIDs
+}
+
+func (r *UserRepository) DeleteByUUID(uuid string) error {
+	tx := r.dbService.ActiveTx()
+	if tx == nil {
+		tx = r.dbService.DB()
+	}
+
+	result := tx.Unscoped().Where("uuid = ?", uuid).Delete(&models.User{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	return nil
 }
 
 func NewUserRepository(dbService *gorm.DBService) *UserRepository {

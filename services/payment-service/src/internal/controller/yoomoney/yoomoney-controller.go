@@ -4,144 +4,90 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
+	"log"
 	"net/http"
+	"payment-service/internal/model"
+	"payment-service/internal/payment"
+	"payment-service/internal/singleton"
 	"pkg/exceptions"
+	"pkg/infrastructure/client/subscription"
 	"pkg/infrastructure/client/user"
 	response2 "pkg/infrastructure/client/user/response"
+	singleton2 "pkg/singleton"
+	"strings"
 	"time"
 )
 
-type yoomoneyLogRequest struct {
-	NotificationType string    `form:"notification_type"`
-	OperationId      string    `form:"operation_id"`
-	Amount           float32   `form:"amount"`
-	WithdrawAmount   float32   `form:"withdraw_amount"`
-	Datetime         time.Time `form:"datetime"`
-	Label            string    `form:"label"`
+type LogRequest struct {
+	NotificationType string    `form:"notification_type" json:"notification_type"`
+	OperationId      string    `form:"operation_id" json:"operation_id"`
+	Amount           float32   `form:"amount" json:"amount"`
+	WithdrawAmount   float32   `form:"withdraw_amount" json:"withdraw_amount"`
+	Datetime         time.Time `form:"datetime" json:"datetime"`
+	Label            string    `form:"label" json:"label"`
 }
 
-//func createYoomoneyLog(c *gin.Context) {
-//	var request yoomoneyLogRequest
-//	var settings BotSettings
-//
-//	DB.Model(&BotSettings{}).First(&settings)
-//
-//	if err := c.ShouldBind(&request); err != nil {
-//		log.Println(err)
-//		c.JSON(http.StatusBadRequest, err)
-//		c.Abort()
-//		return
-//	}
-//
-//	if request.Label == "" {
-//		c.JSON(http.StatusOK, gin.H{})
-//	}
-//	var payment UserPayment
-//	DB.Model(&UserPayment{}).Preload(clause.Associations).Where("uuid = ?", request.Label).Where("uuid != ''").First(&payment)
-//	var newPayment UserPayment
-//	err := DB.Transaction(func(tx *gorm.DB) error {
-//		var err error
-//		defer func() {
-//			if err != nil {
-//				tx.Rollback()
-//			}
-//		}()
-//		if payment.ID == 0 {
-//			if settings.AdminUserId != 0 {
-//				_, err = Bot.Send(tgbotapi.NewMessage(settings.AdminUserId, "Не удалось найти payment.ID. "+request.OperationId))
-//				if err != nil {
-//					log.Println(err)
-//				}
-//			}
-//			return errors.New("Не найден payment.UUID " + request.Label)
-//		}
-//
-//		payment.IsPaid = true
-//		if err = tx.Save(&payment).Error; err != nil {
-//			// Если произошла ошибка, откатываем транзакцию
-//			return err
-//		}
-//		//TODO вынести сеттинги в общий прелоад
-//		if settings.AdminUserId != 0 {
-//			_, err = Bot.Send(tgbotapi.NewMessage(settings.AdminUserId, "Пользователь: "+strconv.Itoa(int(payment.VpnUser.ID))+" произвел оплату"))
-//			if err != nil {
-//				log.Println(err)
-//			}
-//		}
-//
-//		yoomoneyLog := YoomoneyLog{
-//			NotificationType: request.NotificationType,
-//			OperationId:      request.OperationId,
-//			Amount:           request.Amount,
-//			WithdrawAmount:   request.WithdrawAmount,
-//			Datetime:         request.Datetime,
-//			Label:            request.Label,
-//		}
-//		if err = tx.Save(&yoomoneyLog).Error; err != nil {
-//			// Если произошла ошибка, откатываем транзакцию
-//			return err
-//		}
-//
-//		uid, err := uuid.NewRandom()
-//		if err != nil {
-//			return err
-//		}
-//
-//		newPayment = UserPayment{
-//			Model:         gorm.Model{},
-//			PaymentAmount: payment.PaymentAmount,
-//			VpnUserID:     payment.VpnUserID,
-//			IsPaid:        false,
-//			InvoiceDate:   getNextPaymentDate(payment.InvoiceDate),
-//			UUID:          uid.String(),
-//		}
-//		if err = tx.Save(&newPayment).Error; err != nil {
-//			// Если произошла ошибка, откатываем транзакцию
-//			return err
-//		}
-//
-//		return nil
-//	})
-//
-//	if err != nil {
-//		if settings.AdminUserId != 0 {
-//			_, err = Bot.Send(tgbotapi.NewMessage(settings.AdminUserId, "Автоматическая оплата не прошла! UUID: "+request.Label+" : "+request.OperationId))
-//			if err != nil {
-//				log.Println(err)
-//			}
-//		}
-//		if payment.ID != 0 {
-//			err = BotSendMessage(
-//				tgbotapi.NewMessage(
-//					payment.VpnUser.ChatId,
-//					"Платеж получен, но не обработан автоматически. Обратитесь к @code_style и сообщите UUID: "+request.Label,
-//				))
-//			if err != nil {
-//				log.Println(err)
-//			}
-//		}
-//	}
-//
-//	if newPayment.ID != 0 {
-//		err = BotSendMessage(tgbotapi.NewMessage(payment.VpnUser.ChatId, "Дата следующей оплаты: "+newPayment.InvoiceDate.Format("02-01-2006")))
-//		if err != nil {
-//			log.Println(err)
-//		}
-//	}
-//
-//	c.JSON(http.StatusOK, gin.H{})
-//}
+func CreateYoomoneyLog(client *user.Client, service *payment.Service) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		defer c.JSON(http.StatusOK, gin.H{})
+		var request LogRequest
+
+		if err := c.ShouldBind(&request); err != nil {
+			log.Println(err)
+			c.JSON(http.StatusBadRequest, err)
+			c.Abort()
+			return
+		}
+
+		if request.Label == "" {
+			c.JSON(http.StatusOK, gin.H{})
+			return
+		}
+
+		_, err := client.GetUserByUUID(user.GetUserByUUIDRequest{UUID: request.Label})
+		if err != nil {
+			//TODO: добавить обработку ненахождения юзера
+			log.Println(err)
+			return
+		}
+
+		decrypted, err := singleton.CryptoService().Decrypt(request.Label)
+		if err != nil {
+			//TODO: добавить обработку
+			log.Println(err)
+			return
+		}
+
+		decryptedString := strings.Split(string(decrypted), ":")
+		if len(decryptedString) != 2 {
+			//TODO: добавить обработку проблем с токеном
+			return
+		}
+		uuid := decryptedString[0]
+
+		var p = model.Payment{
+			PaymentAmount:  float64(request.Amount),
+			WithdrawAmount: float64(request.WithdrawAmount),
+			OperationId:    request.OperationId,
+			CreatedAt:      request.Datetime,
+			Token:          uuid,
+		}
+
+		err = service.LogPayment(p)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		_, err = singleton2.SubscriptionClient().GetSubscriptionByUUID(subscription.GetSubscriptionByUUIDRequest{UUID: uuid})
+		if err != nil {
+			return
+		}
+	}
+}
 
 func paymentForm(client *user.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := c.Param("uuid")
-		//var payment UserPayment
-		//uuid := c.DefaultQuery("uuid", "null")
-		//DB.Model(&UserPayment{}).Preload(clause.Associations).Where("uuid = ?", uuid).First(&payment)
-		//
-		//if payment.IsPaid {
-		//	c.JSON(http.StatusBadRequest, gin.H{"error": "Payment is paid"})
-		//}
 		response, err := client.GetUserByUUID(user.GetUserByUUIDRequest{UUID: uuid})
 		if errors.Is(exceptions.ErrModelNotFound, err) {
 			c.AbortWithError(http.StatusInternalServerError, err)
@@ -155,16 +101,17 @@ func paymentForm(client *user.Client) gin.HandlerFunc {
 			return
 		}
 
+		cryptoService := singleton.CryptoService()
+		encStr := result.Result.User.UUID + ":" + time.Now().String()
+		encrypted, err := cryptoService.Encrypt(encStr)
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 		c.HTML(http.StatusOK, "payload.html", gin.H{
-			"label":   result.Result.User.UUID, // Данные для передачи в шаблон
+			"label":   encrypted,
 			"tg_name": result.Result.User.Email,
 			"amount":  result.Result.User.Subscription.Plan.Price,
 		})
 	}
 }
-
-//func indexYoomoney(c *gin.Context) {
-//	var yoomoneys []YoomoneyLog
-//	DB.Model(&YoomoneyLog{}).Preload(clause.Associations).Find(&yoomoneys)
-//	c.JSON(http.StatusOK, yoomoneys)
-//}

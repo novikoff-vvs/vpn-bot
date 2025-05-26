@@ -1,7 +1,10 @@
 package user
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 	"time"
@@ -37,6 +40,10 @@ type GetUserRequest struct {
 	UUID string `json:"uuid"`
 }
 
+type SyncUsersRequest struct {
+	UUIDs []string `json:"uuids"`
+}
+
 // Create godoc
 // @Summary      Создать пользователя
 // @Description  Создает нового пользователя с указанными данными и возвращает его идентификатор
@@ -61,7 +68,6 @@ func Create(userService *user.Service) gin.HandlerFunc {
 			UUID:      request.UUID,
 			ChatId:    request.ChatId,
 			CreatedAt: time.Time{},
-			IsActive:  true,
 		}
 		id, err := userService.CreateUser(&u)
 		if err != nil {
@@ -191,5 +197,61 @@ func GetUserByChatId(userService *user.Service) gin.HandlerFunc {
 			Email:  u.Email,
 			ChatId: u.ChatId,
 		})
+	}
+}
+
+// DeleteUserByChatId godoc
+// @Summary      Удалить пользователя по Chat ID
+// @Description  Удаляет пользователя из системы по его Chat ID
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        chatId  path  string  true  "ChatID пользователя"
+// @Success      204  "Пользователь успешно удалён"
+// @Failure      400  {object}  object  "Неверный запрос"  example({"error": "invalid request"})
+// @Failure      404  {object}  object  "Пользователь не найден"  example({"error": "user not found"})
+// @Failure      500  {object}  object  "Внутренняя ошибка сервера"  example({"error": "internal server error"})
+// @Router       /user/by-chat/{chatId} [delete]
+func DeleteUserByChatId(userService *user.Service) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		uuid := context.Param("uuid")
+
+		if uuid == "" {
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "uuid is required"})
+			return
+		}
+
+		err := userService.DeleteByUUID(uuid)
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				context.AbortWithStatusJSON(http.StatusNotFound, gin.H{"error": "user not found"})
+				return
+			}
+			PP.Error(err.Error())
+			context.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		context.JSON(http.StatusOK, gin.H{"result": fmt.Sprintf("deleted:%s", uuid)})
+	}
+}
+
+func SyncUsers(userService *user.Service) gin.HandlerFunc {
+	return func(context *gin.Context) {
+		var request SyncUsersRequest
+		err := context.ShouldBind(&request)
+		if err != nil {
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if len(request.UUIDs) <= 0 {
+			context.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "uuid is required"})
+			return
+		}
+		synced, err := userService.SyncUsers(request.UUIDs)
+		if err != nil {
+			return
+		}
+		context.JSON(http.StatusOK, gin.H{"result": synced})
 	}
 }

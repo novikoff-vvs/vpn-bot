@@ -6,11 +6,12 @@ import (
 )
 
 type Config struct {
-	Logger         Logger                 `mapstructure:"logger"`
-	VpnService     pkg_config.VpnService  `mapstructure:"vpn_service"`
-	BotSettings    BotSettings            `mapstructure:"bot_settings"`
-	UserService    pkg_config.UserService `mapstructure:"user_service"`
-	PaymentService PaymentService         `mapstructure:"payment_service"`
+	Logger         Logger                   `mapstructure:"logger"`
+	VpnService     pkg_config.VpnService    `mapstructure:"vpn_service"`
+	BotSettings    BotSettings              `mapstructure:"bot_settings"`
+	UserService    pkg_config.UserService   `mapstructure:"user_service"`
+	PaymentService PaymentService           `mapstructure:"payment_service"`
+	Nats           pkg_config.NatsPublisher `mapstructure:"nats_publisher"`
 }
 
 type Logger struct {

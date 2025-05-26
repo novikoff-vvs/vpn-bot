@@ -105,6 +105,37 @@ paths:
       tags:
       - user
   /user/by-chat/{chatId}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет пользователя из системы по его Chat ID
+      parameters:
+      - description: ChatID пользователя
+        in: path
+        name: chatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Пользователь успешно удалён
+        "400":
+          description: 'Неверный запрос"  example({"error": "invalid request"})'
+          schema:
+            type: object
+        "404":
+          description: 'Пользователь не найден"  example({"error": "user not found"})'
+          schema:
+            type: object
+        "500":
+          description: 'Внутренняя ошибка сервера"  example({"error": "internal server
+            error"})'
+          schema:
+            type: object
+      summary: Удалить пользователя по Chat ID
+      tags:
+      - user
     get:
       consumes:
       - application/json

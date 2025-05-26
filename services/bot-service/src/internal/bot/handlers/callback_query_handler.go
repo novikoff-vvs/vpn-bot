@@ -47,6 +47,7 @@ func (h CallbackQueryHandler) GetConfigHandle(context.Context, *tgb.CallbackQuer
 }
 
 func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.CallbackQueryUpdate) error {
+	cachedUser, _ := singleton.UserContainer().Get(int64(update.CallbackQuery.From.ID))
 	link, err := h.vpnRepo.GetSubscriptionLinkByChatId(int64(update.CallbackQuery.From.ID))
 	if err != nil {
 		return err
@@ -62,7 +63,7 @@ func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.Call
 		Client.
 		SendMessage(update.CallbackQuery.From.ID, "Чем еще могу помочь?").
 		ParseMode(tg.HTML).
-		ReplyMarkup(singleton.MessageBuilder().GetMainMenuKeyboad()).
+		ReplyMarkup(singleton.MessageBuilder().GetMainMenuKeyboad(cachedUser.User.UUID)).
 		DoVoid(ctx)
 }
 

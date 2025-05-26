@@ -18,3 +18,13 @@ base:
 bot_settings:
   token:
 
+database:
+  path: database/user_service.db
+  host:
+  user:
+  password:
+  db:
+  port:
+
+crypto:
+  key:

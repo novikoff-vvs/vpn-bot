@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	usrClient "pkg/infrastructure/client/user"
 	vpn2 "pkg/infrastructure/client/vpn"
+	singleton2 "pkg/singleton"
 	"syscall"
 )
 
@@ -33,6 +34,7 @@ func main() {
 		Type:   zapcore.StringType,
 		String: "Bot-service",
 	})
+	singleton2.NatsPublisherBoot(cfg.Nats)
 
 	userClient := usrClient.NewUserClient(cfg.UserService)
 	userRepo := user.NewHTTPUserRepository(userClient)

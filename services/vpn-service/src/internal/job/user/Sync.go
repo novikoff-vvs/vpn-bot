@@ -20,7 +20,9 @@ func (j SyncJob) Run() {
 	if err != nil {
 		j.lg.Error(fmt.Sprintf("get all users error: %s", err.Error()))
 	}
+	var uuids []string
 	for _, user := range users {
+		uuids = append(uuids, user.UUID)
 		var req = pkg_user.GetUserByChatIdRequest{
 			ChatId: user.ChatId,
 		}
@@ -43,6 +45,12 @@ func (j SyncJob) Run() {
 			continue
 		}
 	}
+	syncedUsers, err := j.client.SyncUsers(pkg_user.SyncUsersRequest{UUIDs: uuids})
+	if err != nil {
+		j.lg.Error(fmt.Sprintf("SyncUsers error: %s", err.Error()))
+		return
+	}
+	j.lg.Info(fmt.Sprintf("Synced users: %v", syncedUsers))
 }
 
 func NewSyncJob(client *pkg_user.Client, vpnService vpn.ServiceInterface, lg logger.Interface) *SyncJob {

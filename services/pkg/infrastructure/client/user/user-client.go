@@ -22,6 +22,10 @@ type GetUserByUUIDRequest struct {
 	UUID string `json:"uuid"`
 }
 
+type SyncUsersRequest struct {
+	UUIDs []string `json:"uuids"`
+}
+
 type Client struct {
 	client *resty.Client
 	cfg    config.UserService
@@ -38,7 +42,6 @@ func (c Client) Create(req CreateUserRequest) (*resty.Response, error) {
 	}
 	return response, nil
 }
-
 func (c Client) GetByChatID(req GetUserByChatIdRequest) (*resty.Response, error) {
 	// TODO: добавить логирование
 	response, err := c.client.R().
@@ -81,7 +84,24 @@ func (c Client) GetUserByUUID(req GetUserByUUIDRequest) (*resty.Response, error)
 
 	return response, nil
 }
+func (c Client) SyncUsers(req SyncUsersRequest) (*resty.Response, error) {
+	// TODO: добавить логирование
+	response, err := c.client.R().SetBody(req).Post("user/sync-users")
 
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode() == 404 {
+		return nil, exceptions.ErrModelNotFound
+	}
+
+	if response.IsError() {
+		return nil, fmt.Errorf("unexpected status: %d, body: %s", response.StatusCode(), response.String())
+	}
+
+	return response, nil
+}
 func (c Client) Close() error {
 	err := c.client.Close()
 	if err != nil {

@@ -14,3 +14,6 @@ database:
   password:
   db:
   port:
+
+nats_publisher:
+  url:

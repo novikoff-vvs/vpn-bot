@@ -5,9 +5,10 @@ import (
 )
 
 type Config struct {
-	Logger   Logger   `mapstructure:"logger"`
-	Base     Base     `mapstructure:"base"`
-	Database Database `mapstructure:"database"`
+	Logger        Logger                   `mapstructure:"logger"`
+	Base          Base                     `mapstructure:"base"`
+	Database      Database                 `mapstructure:"database"`
+	NatsPublisher pkg_config.NatsPublisher `mapstructure:"nats_publisher"`
 }
 
 type Logger struct {

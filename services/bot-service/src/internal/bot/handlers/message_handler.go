@@ -53,7 +53,7 @@ func (h MessageHandler) ContactHandle(ctx context.Context, update *tgb.MessageUp
 		if err != nil {
 			return err
 		}
-		return singleton.MessageBuilder().GetSuccessRegister(update, link).AddRequestMainMenuKeyboard().RemoveKeyboard().Build().DoVoid(ctx)
+		return singleton.MessageBuilder().GetSuccessRegister(update, link).AddRequestMainMenuKeyboard(user.UUID).RemoveKeyboard().Build().DoVoid(ctx)
 	}
 	if err != nil {
 		//todo нужно сказать пользователю, что у нас ошибка

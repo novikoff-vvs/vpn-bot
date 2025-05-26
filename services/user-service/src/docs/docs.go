@@ -71,6 +71,51 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "delete": {
+                "description": "Удаляет пользователя из системы по его Chat ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Удалить пользователя по Chat ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ChatID пользователя",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Пользователь успешно удалён"
+                    },
+                    "400": {
+                        "description": "Неверный запрос\"  example({\"error\": \"invalid request\"})",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Пользователь не найден\"  example({\"error\": \"user not found\"})",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера\"  example({\"error\": \"internal server error\"})",
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                }
             }
         },
         "/user/create": {
