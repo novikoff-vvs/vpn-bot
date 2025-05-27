@@ -3,6 +3,7 @@ package main
 import (
 	"bot-service/config"
 	"bot-service/internal/bot"
+	"bot-service/internal/handler/nats"
 	"bot-service/internal/repository/http/user"
 	"bot-service/internal/repository/http/vpn"
 	"bot-service/internal/singleton"
@@ -44,12 +45,29 @@ func main() {
 	userService := usrService.NewUserService(vpnRepo, userRepo)
 
 	service := bot.NewService(cfg.BotSettings.Token, userService, vpnRepo)
-	go func() {
+	var errChan = make(chan error, 1)
+	go func(errChan chan error) {
 		err := service.Run()
 		if err != nil {
-			panic(err)
+			lg.Error(err.Error(), zap.Field{
+				Key:    "service",
+				Type:   zapcore.StringType,
+				String: "Bot-service",
+			})
+			errChan <- err
 		}
-	}()
+	}(errChan)
+
+	subscriptionService := nats.NewSubscriptionHandler(service)
+	_, err = subscriptionService.SubscribeToEvents()
+	if err != nil {
+		lg.Error(err.Error(), zap.Field{
+			Key:    "service",
+			Type:   zapcore.StringType,
+			String: "Bot-service",
+		})
+		return
+	}
 
 	ch := make(chan os.Signal, 1)
 	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
@@ -58,7 +76,16 @@ func main() {
 		Type:   zapcore.StringType,
 		String: "Bot-service",
 	})
-	<-ch
+
+	select {
+	case <-ch:
+		break
+	case <-errChan:
+		{
+			return
+		}
+	}
+
 	lg.Info("Bot-service down", zap.Field{
 		Key:    "service",
 		Type:   zapcore.StringType,

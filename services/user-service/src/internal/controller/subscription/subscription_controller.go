@@ -44,11 +44,13 @@ func refresh(subscriptionService *subscription.Service) gin.HandlerFunc {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+
 		err = singleton.NatsPublisher().Publish("events.subscription.refreshed", marshal)
 		if err != nil {
 			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+
 		c.JSON(http.StatusOK, gin.H{"result": s})
 	}
 }

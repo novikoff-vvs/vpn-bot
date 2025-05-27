@@ -19,5 +19,6 @@ func registerApi(r *gin.RouterGroup, service vpn.ServiceInterface) {
 		vpnGroup.GET("/exists/:chatId", UserExists(service))
 		vpnGroup.GET("/by-email/:email", GetUserByEmail(service))
 		vpnGroup.GET("/subscription-link/:chatId", GetSubcLinkByChatId(service))
+		vpnGroup.PUT("/by-uuid/:uuid/update-client", UpdateClient(service))
 	}
 }

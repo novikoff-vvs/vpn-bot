@@ -6,13 +6,10 @@ import (
 	"bot-service/internal/repository/http/vpn"
 	usrService "bot-service/internal/user"
 	"context"
-	"encoding/json"
 	"github.com/mr-linch/go-tg"
 	"github.com/mr-linch/go-tg/tgb"
-	"github.com/nats-io/nats.go"
 	"log"
 	"pkg/events"
-	singleton2 "pkg/singleton"
 )
 
 type Service struct {
@@ -44,34 +41,6 @@ func (s *Service) Run() error {
 	r.RegisterCallbackQueryHandlers(callbackQueryH)
 	r.RegisterMessageHandlers(messageH)
 
-	_, err := singleton2.NatsPublisher().Subscribe("events.subscription.refreshed", "bot_service_subscription_refreshed_consumer", func(msg *nats.Msg) {
-		var event events.SubscriptionRefreshed
-		err := json.Unmarshal(msg.Data, &event)
-		if err != nil {
-			log.Printf("Error unmarshalling event: %v", err)
-		}
-		log.Println("Сообщение получено!")
-
-		m := tg.HTML.Text(
-			tg.HTML.Bold("💸 Оплата успешно получена!\n"),
-			tg.HTML.Bold("🎉 Ваша подписка обновлена — спасибо, что остаетесь с нами!\n"),
-			"Теперь все функции доступны без ограничений. 💫\n\n",
-			"Если появятся вопросы — мы всегда рядом. 🤝",
-		)
-		err = client.SendMessage(tg.UserID(event.ChatId), m).ParseMode(tg.HTML).DoVoid(context.Background())
-
-		if err != nil {
-			log.Println(err)
-		}
-		err = msg.Ack()
-		if err != nil {
-			log.Println(err)
-		}
-	})
-	if err != nil {
-		log.Println(err.Error())
-	}
-	log.Println("Subscribed")
 	return tgb.NewPoller(
 		router,
 		client,
@@ -81,4 +50,36 @@ func (s *Service) Run() error {
 			tg.UpdateTypeCallbackQuery,
 		),
 	).Run(context.Background())
+}
+
+func (s *Service) NotifySubscriptionRefreshed(event events.SubscriptionRefreshed) (err error) {
+	m := tg.HTML.Text(
+		tg.HTML.Bold("💸 Оплата успешно получена!\n"),
+		tg.HTML.Bold("🎉 Ваша подписка обновлена — спасибо, что остаетесь с нами!\n"),
+		"Dсе функции доступны без ограничений. 💫\n\n",
+		"Если появятся вопросы — мы всегда рядом. 🤝",
+	)
+	err = s.bot.SendMessage(tg.UserID(event.ChatId), m).ParseMode(tg.HTML).DoVoid(context.Background())
+
+	if err != nil {
+		//todo добавить логирование
+		log.Println(err)
+		return err
+	}
+	return nil
+}
+
+func (s *Service) NotifyDeactivatedUser(event events.UserDeactivated) error {
+	m := tg.HTML.Text(
+		tg.HTML.Bold("😵 Вы деактивированы!"),
+		tg.HTML.Blockquote("Кажется вы не оплатили подписку или нарушили наши правила! 😔"),
+		"Если появятся вопросы — то обращайтесь в теххподдержку",
+	)
+	err := s.bot.SendMessage(tg.UserID(event.ChatId), m).ParseMode(tg.HTML).DoVoid(context.Background())
+	if err != nil {
+		//todo добавить логирование
+		log.Println(err)
+		return err
+	}
+	return nil
 }

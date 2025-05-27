@@ -42,6 +42,7 @@ func main() {
 		return
 	}
 	LoggingService.Info("Initializing app")
+	singleton.VpnClientBoot(cfg.VpnService, LoggingService)
 	singleton.NatsPublisherBoot(cfg.NatsPublisher)
 
 	db, err := migration.InitDBConnection(cfg.Database)
@@ -58,7 +59,7 @@ func main() {
 	userService := user2.NewUserService(userRepo, subscrRepo)
 	planService := plan.NewPlanService(sqlite.NewPlanRepository(newDatabaseService))
 	subscriptionRepo := sqliteSubscription.NewSubscriptionRepository(newDatabaseService)
-	subscriptionService := subscription2.NewSubscriptionService(subscriptionRepo, planService)
+	subscriptionService := subscription2.NewSubscriptionService(subscriptionRepo, planService, singleton.VpnClient())
 
 	s := http.NewServer(LoggingService)
 

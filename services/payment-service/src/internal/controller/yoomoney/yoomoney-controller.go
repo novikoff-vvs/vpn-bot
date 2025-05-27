@@ -89,15 +89,15 @@ func paymentForm(client *user.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := c.Param("uuid")
 		response, err := client.GetUserByUUID(user.GetUserByUUIDRequest{UUID: uuid})
-		if errors.Is(exceptions.ErrModelNotFound, err) {
-			c.AbortWithError(http.StatusInternalServerError, err)
+		if errors.Is(err, exceptions.ErrModelNotFound) {
+			err = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 		var result response2.GetUserByUUIDResponse
 
 		err = json.Unmarshal(response.Bytes(), &result)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			err = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -105,7 +105,7 @@ func paymentForm(client *user.Client) gin.HandlerFunc {
 		encStr := result.Result.User.UUID + ":" + time.Now().String()
 		encrypted, err := cryptoService.Encrypt(encStr)
 		if err != nil {
-			c.AbortWithError(http.StatusInternalServerError, err)
+			err = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 		c.HTML(http.StatusOK, "payload.html", gin.H{

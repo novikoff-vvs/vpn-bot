@@ -17,3 +17,6 @@ database:
 
 nats_publisher:
   url:
+
+vpn_service:
+  url:

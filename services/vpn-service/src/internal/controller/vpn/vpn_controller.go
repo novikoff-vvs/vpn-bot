@@ -189,6 +189,10 @@ type SubscriptionLinkResource struct {
 func GetSubcLinkByChatId(service vpn.ServiceInterface) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		chatId, err := strconv.ParseInt(c.Param("chatId"), 10, 64)
+		if err != nil {
+			err = c.AbortWithError(http.StatusBadRequest, err)
+			return
+		}
 		user, err := service.UserGetByChatId(chatId)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
@@ -198,5 +202,37 @@ func GetSubcLinkByChatId(service vpn.ServiceInterface) gin.HandlerFunc {
 		c.JSON(http.StatusOK, SubscriptionLinkResource{
 			SubscriptionLink: subscLink,
 		})
+	}
+}
+
+type UpdateClientRequest struct {
+	Email          string `json:"email"`
+	TotalGB        int64  `json:"total_gb"`
+	ExpiryTimeUnix int64  `json:"expiry_time_unix"`
+	Enable         bool   `json:"enable"`
+}
+
+func UpdateClient(service vpn.ServiceInterface) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request UpdateClientRequest
+		err := c.BindJSON(&request)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		userUuid := c.Param("uuid")
+		err = service.UpdateClient(userUuid, vpn.UpdateClientDTO{
+			ID:         userUuid,
+			Email:      request.Email,
+			TotalGB:    request.TotalGB,
+			ExpiryTime: request.ExpiryTimeUnix,
+			Enable:     request.Enable,
+		})
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"result": "updated"})
 	}
 }

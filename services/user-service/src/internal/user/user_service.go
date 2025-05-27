@@ -119,7 +119,7 @@ func (s Service) DeleteByUUID(uuid string) error {
 }
 
 func (s Service) SyncUsers(UUIDs []string) ([]string, error) {
-	err, exiting := s.userRepo.GetAllUUIDs(UUIDs)
+	exiting, err := s.userRepo.GetAllUUIDs(UUIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -129,9 +129,15 @@ func (s Service) SyncUsers(UUIDs []string) ([]string, error) {
 	}
 
 	for _, uuid := range exiting {
+		user, err := s.userRepo.GetByUUID(uuid)
+
+		if err != nil {
+			return nil, err
+		}
+
 		marshal, err := json.Marshal(events.UserDeactivated{
 			UserUUID: uuid,
-			ChatId:   0,
+			ChatId:   user.ChatId,
 		})
 		if err != nil {
 			return nil, err

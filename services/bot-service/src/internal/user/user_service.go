@@ -54,8 +54,9 @@ func (u Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 	var err error
 	var user models.VpnUser
 	cachedUser, ok := singleton.UserContainer().Get(chatId)
-	user = cachedUser.User
-	if !ok {
+	if ok {
+		user = cachedUser.User
+	} else {
 		user, err = u.userRepo.GetUserByChatId(chatId)
 		if err == nil {
 			return user, nil
@@ -70,7 +71,7 @@ func (u Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 		}
 	}
 
-	return models.VpnUser{}, err
+	return user, err
 }
 
 func (u Service) UserGetByEmail(email string) (models.VpnUser, error) {

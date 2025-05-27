@@ -3,6 +3,7 @@ package subscription
 import (
 	"errors"
 	"gorm.io/gorm"
+	"pkg/infrastructure/client/vpn"
 	"time"
 	"user-service/internal/models"
 	"user-service/internal/plan"
@@ -18,6 +19,7 @@ type RefreshDTO struct {
 type Service struct {
 	repo        *sqlite.SubscriptionRepository
 	planService *plan.Service
+	vpnClient   *vpn.Client
 }
 
 func (s Service) GetSubscriptionByUser(uuid string) (*models.Subscription, error) {
@@ -33,18 +35,18 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 
 	activeSubscription, err := s.repo.GetActiveByUserUUID(dto.UserUUID)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		err = s.repo.RollbackTransaction()
-		if err != nil {
-			return nil, err
+		er := s.repo.RollbackTransaction()
+		if er != nil {
+			return nil, er
 		}
 		return nil, err
 	}
 	if activeSubscription == nil {
 		activeSubscription, err = s.repo.GetByUserUUID(dto.UserUUID)
 		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-			err = s.repo.RollbackTransaction()
-			if err != nil {
-				return nil, err
+			er := s.repo.RollbackTransaction()
+			if er != nil {
+				return nil, er
 			}
 			return nil, err
 		}
@@ -55,18 +57,18 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 	}
 
 	if activeSubscription == nil {
-		err = s.repo.RollbackTransaction()
-		if err != nil {
-			return nil, err
+		er := s.repo.RollbackTransaction()
+		if er != nil {
+			return nil, er
 		}
 		return nil, err
 	}
 
 	upgradedPlan, err := s.planService.GetUpgradedPlan(activeSubscription.Plan)
 	if err != nil {
-		err = s.repo.RollbackTransaction()
-		if err != nil {
-			return nil, err
+		er := s.repo.RollbackTransaction()
+		if er != nil {
+			return nil, er
 		}
 		return nil, err
 	}
@@ -76,7 +78,7 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 	if expiresAt.Before(now) {
 		expiresAt = now
 	}
-	expiresAt = expiresAt.Add(time.Duration(upgradedPlan.DurationDays * dto.AmountPeriods))
+	expiresAt = expiresAt.AddDate(0, 0, upgradedPlan.DurationDays*dto.AmountPeriods)
 
 	activeSubscription.Plan = upgradedPlan
 	activeSubscription.IsActive = true
@@ -84,9 +86,9 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 
 	err = s.repo.Extend(activeSubscription)
 	if err != nil {
-		err = s.repo.RollbackTransaction()
-		if err != nil {
-			return nil, err
+		er := s.repo.RollbackTransaction()
+		if er != nil {
+			return nil, er
 		}
 		return nil, err
 	}
@@ -94,9 +96,25 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	_, err = s.vpnClient.UpdateClient(activeSubscription.UserUUID, vpn.UpdateClientRequest{
+		Email:          activeSubscription.User.Email,
+		TotalGB:        10737418240,
+		ExpiryTimeUnix: activeSubscription.ExpiresAt.UnixMilli(),
+		Enable:         true,
+	})
+
+	if err != nil {
+		er := s.repo.RollbackTransaction()
+		if er != nil {
+			return nil, er
+		}
+		return nil, err
+	}
+
 	return activeSubscription, nil
 }
 
-func NewSubscriptionService(repo *sqlite.SubscriptionRepository, planService *plan.Service) *Service {
-	return &Service{repo: repo, planService: planService}
+func NewSubscriptionService(repo *sqlite.SubscriptionRepository, planService *plan.Service, vpnClient *vpn.Client) *Service {
+	return &Service{repo: repo, planService: planService, vpnClient: vpnClient}
 }

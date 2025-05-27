@@ -88,12 +88,13 @@ func (r *UserRepository) GetByChatId(chatId int64) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *UserRepository) GetAllUUIDs(uuids []string) (error, []string) {
+func (r *UserRepository) GetAllUUIDs(uuids []string) ([]string, error) {
 	var existingUUIDs []string
-	return r.dbService.DB().
+	err := r.dbService.DB().
 		Model(&models.User{}).
 		Where("uuid NOT IN ?", uuids).
-		Pluck("uuid", &existingUUIDs).Error, existingUUIDs
+		Pluck("uuid", &existingUUIDs).Error
+	return existingUUIDs, err
 }
 
 func (r *UserRepository) DeleteByUUID(uuid string) error {
