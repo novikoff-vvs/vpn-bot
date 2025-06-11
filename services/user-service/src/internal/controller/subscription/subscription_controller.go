@@ -58,7 +58,7 @@ func refresh(subscriptionService *subscription.Service) gin.HandlerFunc {
 func getSubscriptionByUser(subscriptionService *subscription.Service) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		uuid := c.Param("id")
-		getSubscription, err := subscriptionService.GetSubscriptionByUser(uuid)
+		getSubscription, err := subscriptionService.GetActiveSubscriptionByUser(uuid)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

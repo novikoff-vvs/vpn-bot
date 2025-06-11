@@ -24,6 +24,7 @@ func main() {
 		log.Println(err.Error())
 		return
 	}
+
 	db, err := migration.InitDBConnection(cfg.Database)
 	if err != nil {
 		lg.Error(err.Error())
@@ -35,12 +36,12 @@ func main() {
 	bootSingletons(cfg)
 
 	paymentRepository := paymentRepo.NewPaymentRepository(dbService)
-	paymentServices := payment.NewPaymentService(paymentRepository)
+	paymentServices := payment.NewPaymentService(paymentRepository, singleton.SubscriptionClient())
 	client := singleton.UserClient()
 
 	server := http.NewServer(lg)
 	server.RegisterStatic()
-	yoomoney.RegisterRoutes(server, client, paymentServices)
+	yoomoney.RegisterRoutes(server, client, paymentServices, lg, cfg.Base.PaymentSecret)
 
 	err = server.Run(cfg.Base.AppPort)
 

@@ -14,6 +14,7 @@ user_service:
 
 base:
   app_port: 8080
+  payment_secret: oSFfPPGpViBbGpOhRBWDOfEb
 
 bot_settings:
   token:

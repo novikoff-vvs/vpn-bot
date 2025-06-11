@@ -19,7 +19,8 @@ type Logger struct {
 }
 
 type Base struct {
-	AppPort string `mapstructure:"app_port"`
+	AppPort       string `mapstructure:"app_port"`
+	PaymentSecret string `mapstructure:"payment_secret"`
 }
 
 type Crypto struct {

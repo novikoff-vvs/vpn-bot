@@ -56,7 +56,7 @@ func (s *Service) NotifySubscriptionRefreshed(event events.SubscriptionRefreshed
 	m := tg.HTML.Text(
 		tg.HTML.Bold("💸 Оплата успешно получена!\n"),
 		tg.HTML.Bold("🎉 Ваша подписка обновлена — спасибо, что остаетесь с нами!\n"),
-		"Dсе функции доступны без ограничений. 💫\n\n",
+		"Все функции доступны без ограничений. 💫\n\n",
 		"Если появятся вопросы — мы всегда рядом. 🤝",
 	)
 	err = s.bot.SendMessage(tg.UserID(event.ChatId), m).ParseMode(tg.HTML).DoVoid(context.Background())

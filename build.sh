@@ -6,7 +6,7 @@ TAG="${2:-latest}"
 REGISTRY="${3:-registry.novvs.ru}"
 
 # Список сервисов — впиши сюда нужные руками
-SERVICES=("bot-service" )
+SERVICES=("bot-service" "user-service" "payment-service" "vpn-service")
 
 # Билдим и пушим каждый сервис
 for SERVICE_NAME in "${SERVICES[@]}"; do

@@ -5,6 +5,7 @@ import (
 	"github.com/novikoff-vvs/logger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"os"
 	"pkg/infrastructure/DB/gorm"
 	"pkg/infrastructure/http"
 	"pkg/singleton"
@@ -39,8 +40,11 @@ func main() {
 	LoggingService, err = logger.NewZapLogger(cfg.Logger.Path, cfg.Logger.Name, cfg.Logger.IsOutput)
 	if err != nil {
 		fmt.Println("Error initializing logger: ", err)
+		//todo Везде сделать os.Exit()
+		os.Exit(1)
 		return
 	}
+
 	LoggingService.Info("Initializing app")
 	singleton.VpnClientBoot(cfg.VpnService, LoggingService)
 	singleton.NatsPublisherBoot(cfg.NatsPublisher)

@@ -21,7 +21,11 @@ func InitDBConnection(cfg config.Database) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// Добавим тарифы, если они ещё не добавлены
+	db.Exec(`
+	CREATE UNIQUE INDEX IF NOT EXISTS idx_user_active_sub
+    ON subscriptions(user_uuid)
+    WHERE is_active = true;`)
+
 	if err := seeds.SeedPlans(db); err != nil {
 		return nil, err
 	}

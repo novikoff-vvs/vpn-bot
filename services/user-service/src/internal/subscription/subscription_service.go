@@ -83,6 +83,17 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 	activeSubscription.Plan = upgradedPlan
 	activeSubscription.IsActive = true
 	activeSubscription.ExpiresAt = expiresAt //TODO возможно нужно обновлять started_at
+	oldSubscriptionId := activeSubscription.ID
+	activeSubscription.ID = 0
+
+	err = s.repo.Deactivate(oldSubscriptionId)
+	if err != nil {
+		er := s.repo.RollbackTransaction()
+		if er != nil {
+			return nil, er
+		}
+		return nil, err
+	}
 
 	err = s.repo.Extend(activeSubscription)
 	if err != nil {
@@ -92,6 +103,7 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 		}
 		return nil, err
 	}
+
 	err = s.repo.CommitTransaction()
 	if err != nil {
 		return nil, err

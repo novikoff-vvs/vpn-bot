@@ -4,6 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Оплата через YooMoney</title>
+    <!-- Добавляем иконку для вкладки браузера -->
+    <link rel="icon" href="https://yoomoney.ru/favicon.ico" type="image/x-icon" />
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -159,6 +161,9 @@
 <div class="container">
     <h1>Оплата через ЮMoney</h1>
     <p>Для завершения транзакции выберите метод оплаты и нажмите кнопку "Перевести".</p>
+
+    <!-- Новая строка с суммой -->
+    <p><strong>Сумма к оплате:</strong> {{.amount}} ₽</p>
 
     <form method="POST" action="https://yoomoney.ru/quickpay/confirm">
         <input type="hidden" name="receiver" value="410011890678722" />

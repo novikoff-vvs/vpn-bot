@@ -1,6 +1,7 @@
 package sqlite
 
 import (
+	gorm2 "gorm.io/gorm"
 	"pkg/infrastructure/DB/gorm"
 	"time"
 	"user-service/internal/models"
@@ -32,7 +33,10 @@ func (r *SubscriptionRepository) Create(subscription *models.Subscription) (uint
 
 func (r *SubscriptionRepository) GetActiveByUserUUID(userUUID string) (*models.Subscription, error) {
 	var sub models.Subscription
-	tx := r.dbService.ActiveTx().Where("user_uuid = ? AND is_active = ? AND expires_at > ?", userUUID, true, time.Now()).
+	tx := r.dbService.
+		ActiveTx().
+		Scopes(ActiveSubscription).
+		Where("user_uuid = ?", userUUID).
 		Preload("Plan").
 		Preload("User").
 		Order("expires_at DESC").
@@ -46,7 +50,9 @@ func (r *SubscriptionRepository) GetActiveByUserUUID(userUUID string) (*models.S
 
 func (r *SubscriptionRepository) GetByUserUUID(userUUID string) (*models.Subscription, error) {
 	var sub models.Subscription
-	tx := r.dbService.DB().Where("user_uuid = ?", userUUID).
+	tx := r.dbService.
+		DB().
+		Where("user_uuid = ?", userUUID).
 		Preload("Plan").
 		Preload("User").
 		Order("expires_at DESC").
@@ -59,8 +65,8 @@ func (r *SubscriptionRepository) GetByUserUUID(userUUID string) (*models.Subscri
 }
 
 func (r *SubscriptionRepository) Extend(subscription *models.Subscription) error {
-	tx := r.dbService.ActiveTx().Model(subscription).
-		Updates(subscription)
+	tx := r.dbService.ActiveTx().
+		Create(subscription)
 
 	return tx.Error
 }
@@ -77,4 +83,9 @@ func NewSubscriptionRepository(dbService *gorm.DBService) *SubscriptionRepositor
 	return &SubscriptionRepository{
 		dbService: dbService,
 	}
+}
+
+func ActiveSubscription(db *gorm2.DB) *gorm2.DB {
+	return db.
+		Where("expires_at > ? AND deleted_at is NULL AND is_active = ? ", time.Now(), true)
 }

@@ -1,19 +1,22 @@
 package yoomoney
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
-	"log"
+	"github.com/novikoff-vvs/logger"
 	"net/http"
+	"net/url"
 	"payment-service/internal/model"
 	"payment-service/internal/payment"
 	"payment-service/internal/singleton"
 	"pkg/exceptions"
-	"pkg/infrastructure/client/subscription"
 	"pkg/infrastructure/client/user"
 	response2 "pkg/infrastructure/client/user/response"
-	singleton2 "pkg/singleton"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -27,45 +30,119 @@ type LogRequest struct {
 	Label            string    `form:"label" json:"label"`
 }
 
-func CreateYoomoneyLog(client *user.Client, service *payment.Service) func(c *gin.Context) {
+func CreateYoomoneyLog(client *user.Client, service *payment.Service, log logger.Interface, paymentSecret string) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		defer c.JSON(http.StatusOK, gin.H{})
+
 		var request LogRequest
 
-		if err := c.ShouldBind(&request); err != nil {
-			log.Println(err)
-			c.JSON(http.StatusBadRequest, err)
-			c.Abort()
+		if err := c.Request.ParseForm(); err != nil {
+			log.Error(fmt.Sprintf("Failed to parse form: %v", err))
 			return
+		}
+
+		for key, values := range c.Request.PostForm {
+			for _, value := range values {
+				log.Info(fmt.Sprintf("PostForm param: %s = %s", key, value))
+			}
+		}
+
+		if err := c.Request.ParseForm(); err != nil {
+			c.String(http.StatusBadRequest, "Ошибка парсинга формы")
+			return
+		}
+
+		form := c.Request.PostForm
+		form["notification_secret"] = []string{paymentSecret}
+
+		keys := []string{
+			"notification_type",
+			"operation_id",
+			"amount",
+			"currency",
+			"datetime",
+			"sender",
+			"codepro",
+			"notification_secret",
+			"label",
+		}
+
+		var params []string
+		for _, key := range keys {
+			if key == "sha1_hash" {
+				continue
+			}
+			values := form[key]
+			if len(values) > 0 {
+				val := values[0]
+				params = append(params, val)
+			}
+		}
+
+		result := strings.Join(params, "&")
+		log.Info(result)
+
+		hash := sha1.New()
+		hash.Write([]byte(result))
+		sha1Hash := hex.EncodeToString(hash.Sum(nil))
+
+		log.Info(fmt.Sprintf("Calculated SHA1 hash: %s", sha1Hash))
+		log.Info(fmt.Sprintf("Requested SHA1 hash: %s", c.Request.FormValue("sha1_hash")))
+
+		if c.Request.FormValue("sha1_hash") != sha1Hash {
+			log.Error("SHA1 hash mismatch – possible spoofed request or secret mismatch.")
+			//return
+		}
+
+		log.Info("SHA1 hash matched — notification is verified.")
+
+		request.Label = c.PostForm("label")
+		request.OperationId = c.PostForm("operation_id")
+		request.NotificationType = c.PostForm("notification_type")
+
+		datetimeStr := c.PostForm("datetime")
+		parsedTime, err := time.Parse(time.RFC3339, datetimeStr)
+		if err != nil {
+			log.Error(fmt.Sprintf("Invalid datetime format: %s, error: %v", datetimeStr, err))
+			return
+		}
+		request.Datetime = parsedTime
+
+		amountStr := c.PostForm("amount")
+		amount, err := strconv.ParseFloat(amountStr, 32)
+		if err != nil {
+			log.Error(fmt.Sprintf("Invalid amount format: %s, error: %v", amountStr, err))
+			return
+		}
+		request.Amount = float32(amount)
+
+		withdrawStr := c.PostForm("withdraw_amount")
+		if withdrawStr == "" {
+			log.Info("withdraw_amount is empty, defaulting to 0")
+			request.WithdrawAmount = 0
+		} else {
+			withdraw, err := strconv.ParseFloat(withdrawStr, 32)
+			if err != nil {
+				log.Error(fmt.Sprintf("Invalid withdraw_amount format: %s, error: %v", withdrawStr, err))
+				return
+			}
+			request.WithdrawAmount = float32(withdraw)
 		}
 
 		if request.Label == "" {
-			c.JSON(http.StatusOK, gin.H{})
+			log.Error("Empty label received")
 			return
 		}
 
-		_, err := client.GetUserByUUID(user.GetUserByUUIDRequest{UUID: request.Label})
+		uuid := request.Label
+
+		_, err = client.GetUserByUUID(user.GetUserByUUIDRequest{UUID: request.Label})
 		if err != nil {
-			//TODO: добавить обработку ненахождения юзера
-			log.Println(err)
+			log.Error(fmt.Sprintf("User not found with UUID: %s, error: %v", uuid, err))
 			return
 		}
 
-		decrypted, err := singleton.CryptoService().Decrypt(request.Label)
-		if err != nil {
-			//TODO: добавить обработку
-			log.Println(err)
-			return
-		}
-
-		decryptedString := strings.Split(string(decrypted), ":")
-		if len(decryptedString) != 2 {
-			//TODO: добавить обработку проблем с токеном
-			return
-		}
-		uuid := decryptedString[0]
-
-		var p = model.Payment{
+		p := model.Payment{
 			PaymentAmount:  float64(request.Amount),
 			WithdrawAmount: float64(request.WithdrawAmount),
 			OperationId:    request.OperationId,
@@ -75,13 +152,10 @@ func CreateYoomoneyLog(client *user.Client, service *payment.Service) func(c *gi
 
 		err = service.LogPayment(p)
 		if err != nil {
-			log.Println(err)
+			log.Error(fmt.Sprintf("Failed to log payment: %v", err))
 			return
 		}
-		_, err = singleton2.SubscriptionClient().GetSubscriptionByUUID(subscription.GetSubscriptionByUUIDRequest{UUID: uuid})
-		if err != nil {
-			return
-		}
+		log.Info(fmt.Sprintf("Payment logged: %+v", p))
 	}
 }
 
@@ -102,14 +176,17 @@ func paymentForm(client *user.Client) gin.HandlerFunc {
 		}
 
 		cryptoService := singleton.CryptoService()
-		encStr := result.Result.User.UUID + ":" + time.Now().String()
+		encStr := result.Result.User.UUID + "::" + strconv.FormatInt(time.Now().Unix(), 10)
 		encrypted, err := cryptoService.Encrypt(encStr)
 		if err != nil {
 			err = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+
+		url.QueryEscape(encrypted)
+
 		c.HTML(http.StatusOK, "payload.html", gin.H{
-			"label":   encrypted,
+			"label":   result.Result.User.UUID,
 			"tg_name": result.Result.User.Email,
 			"amount":  result.Result.User.Subscription.Plan.Price,
 		})

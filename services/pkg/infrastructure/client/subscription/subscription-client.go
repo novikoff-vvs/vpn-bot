@@ -3,6 +3,7 @@ package subscription
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"pkg/config"
 	"pkg/exceptions"
 	"pkg/infrastructure/client/subscription/responses"
@@ -43,6 +44,36 @@ func (c Client) GetSubscriptionByUUID(req GetSubscriptionByUUIDRequest) (respons
 		return responses.GetSubscriptionResponse{}, err
 	}
 	return result, nil
+}
+
+type RefreshRequest struct {
+	UserUUID      string `json:"user_uuid"`
+	AmountPeriods int    `json:"amount_periods"`
+}
+
+func (c Client) RefreshSubscription(req RefreshRequest) (responses.GetSubscriptionResponse, error) {
+
+	response, err := c.client.R().
+		SetBody(req).
+		SetHeader("Accept", "application/json").
+		SetResult(&responses.GetSubscriptionResponse{}).
+		Post("subscription/refresh") // Предполагаемый эндпоинт
+
+	if err != nil {
+		return responses.GetSubscriptionResponse{}, err
+	}
+
+	if response.StatusCode() == http.StatusNotFound {
+		return responses.GetSubscriptionResponse{}, exceptions.ErrModelNotFound
+	}
+
+	if response.IsError() {
+		errMsg := fmt.Sprintf("refresh failed with status %d: %s",
+			response.StatusCode(), response.String())
+		return responses.GetSubscriptionResponse{}, fmt.Errorf(errMsg)
+	}
+
+	return *response.Result().(*responses.GetSubscriptionResponse), nil
 }
 
 func NewSubscriptionClient(cfg config.UserService) *Client {

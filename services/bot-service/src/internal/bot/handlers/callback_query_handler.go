@@ -7,7 +7,6 @@ import (
 	"context"
 	"github.com/mr-linch/go-tg"
 	"github.com/mr-linch/go-tg/tgb"
-	"log"
 	"pkg/models"
 )
 
@@ -47,7 +46,18 @@ func (h CallbackQueryHandler) GetConfigHandle(context.Context, *tgb.CallbackQuer
 }
 
 func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.CallbackQueryUpdate) error {
+	var userUUID string
 	cachedUser, _ := singleton.UserContainer().Get(int64(update.CallbackQuery.From.ID))
+	userUUID = cachedUser.User.UUID
+	if len(userUUID) <= 0 {
+		defaultUser, err := h.userService.UserGetByChatId(int64(update.CallbackQuery.From.ID))
+		singleton.UserContainer().Put(defaultUser)
+		if err != nil {
+			return err
+		}
+
+		userUUID = defaultUser.UUID
+	}
 	link, err := h.vpnRepo.GetSubscriptionLinkByChatId(int64(update.CallbackQuery.From.ID))
 	if err != nil {
 		return err
@@ -58,12 +68,12 @@ func (h CallbackQueryHandler) GetVessaLink(ctx context.Context, update *tgb.Call
 		tg.HTML.Line(tg.HTML.Bold("🔗 Ваша подписка: "), tg.HTML.Link("SUBSCRIPTION-URL", link)),
 	)).
 		ParseMode(tg.HTML))
-	log.Println(err) //TODO добавить логер
+
 	return update.
 		Client.
 		SendMessage(update.CallbackQuery.From.ID, "Чем еще могу помочь?").
 		ParseMode(tg.HTML).
-		ReplyMarkup(singleton.MessageBuilder().GetMainMenuKeyboad(cachedUser.User.UUID)).
+		ReplyMarkup(singleton.MessageBuilder().GetMainMenuKeyboad(userUUID)).
 		DoVoid(ctx)
 }
 

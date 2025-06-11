@@ -21,6 +21,13 @@ func (uc UserContainer) Register(user models.VpnUser) {
 	}
 }
 
+func (uc UserContainer) Put(user models.VpnUser) {
+	uc.users[user.ChatId] = CachedUser{
+		User:   user,
+		Expiry: time.Now().Add(time.Hour),
+	}
+}
+
 func (uc UserContainer) Get(chatId int64) (CachedUser, bool) {
 	cachedUser, ok := uc.users[chatId]
 	if !ok {

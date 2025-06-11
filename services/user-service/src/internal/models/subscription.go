@@ -12,7 +12,7 @@ const (
 
 type Subscription struct {
 	ID        uint           `gorm:"primaryKey"`
-	UserUUID  string         `gorm:"not null;index"`
+	UserUUID  string         `gorm:"not null;index;index:idx_user_active_sub,unique"`
 	User      *User          `gorm:"foreignKey:UserUUID;references:UUID;constraint:OnDelete:CASCADE;"` // Ключевой момент
 	PlanCode  string         `gorm:"index"`
 	Plan      Plan           `gorm:"foreignKey:PlanCode;references:Code;constraint:OnDelete:SET NULL;"`
