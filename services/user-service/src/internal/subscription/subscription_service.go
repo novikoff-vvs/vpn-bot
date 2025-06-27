@@ -4,6 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"pkg/infrastructure/client/vpn"
+	"strconv"
 	"time"
 	"user-service/internal/models"
 	"user-service/internal/plan"
@@ -85,6 +86,11 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 	activeSubscription.ExpiresAt = expiresAt //TODO возможно нужно обновлять started_at
 	oldSubscriptionId := activeSubscription.ID
 	activeSubscription.ID = 0
+	err = s.repo.CommitTransaction()
+	if err != nil {
+		return nil, err
+	}
+	s.repo.BeginTransaction()
 
 	err = s.repo.Deactivate(oldSubscriptionId)
 	if err != nil {
@@ -104,16 +110,12 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 		return nil, err
 	}
 
-	err = s.repo.CommitTransaction()
-	if err != nil {
-		return nil, err
-	}
-
 	_, err = s.vpnClient.UpdateClient(activeSubscription.UserUUID, vpn.UpdateClientRequest{
 		Email:          activeSubscription.User.Email,
-		TotalGB:        10737418240,
+		TotalGB:        0,
 		ExpiryTimeUnix: activeSubscription.ExpiresAt.UnixMilli(),
 		Enable:         true,
+		TgId:           strconv.FormatInt(activeSubscription.User.ChatId, 10),
 	})
 
 	if err != nil {
@@ -121,6 +123,11 @@ func (s Service) Refresh(dto RefreshDTO) (*models.Subscription, error) {
 		if er != nil {
 			return nil, er
 		}
+		return nil, err
+	}
+
+	err = s.repo.CommitTransaction()
+	if err != nil {
 		return nil, err
 	}
 

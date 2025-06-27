@@ -255,3 +255,13 @@ func SyncUsers(userService *user.Service) gin.HandlerFunc {
 		context.JSON(http.StatusOK, gin.H{"result": synced})
 	}
 }
+
+func All(userService *user.Service) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		users, err := userService.All()
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		c.JSON(http.StatusOK, gin.H{"result": users})
+	}
+}

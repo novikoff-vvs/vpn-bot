@@ -11,6 +11,7 @@ type UserRepositoryInterface interface {
 	GetByChatId(chatId int64) (*models.User, error)
 	GetAllUUIDs(uuids []string) ([]string, error)
 	DeleteByUUID(uuid string) error
+	GetAll() ([]models.User, error)
 
 	BeginTransaction()
 	CommitTransaction() error

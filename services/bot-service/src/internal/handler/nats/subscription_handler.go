@@ -34,6 +34,12 @@ func (h *SubscriptionHandler) SubscribeToEvents() ([]*nats.Subscription, error) 
 	}
 	subs = append(subs, sub2)
 
+	sub3, err := singleton.NatsPublisher().Subscribe("events.notify.new_message", "bot_service_notify_consumer", h.handleNotifyNewMessage)
+	if err != nil {
+		return nil, err
+	}
+	subs = append(subs, sub3)
+
 	return subs, nil
 }
 
@@ -65,6 +71,24 @@ func (h *SubscriptionHandler) handleUserDeactivated(msg *nats.Msg) {
 	log.Println("Получено событие деактивации пользователя ")
 
 	if err := h.botService.NotifyDeactivatedUser(event); err != nil {
+		log.Println("Ошибка при отправке сообщения:", err)
+	}
+
+	if err := msg.Ack(); err != nil {
+		log.Println("Ошибка при подтверждении сообщения:", err)
+	}
+}
+
+func (h *SubscriptionHandler) handleNotifyNewMessage(msg *nats.Msg) {
+	var event events.NewMessage
+	if err := json.Unmarshal(msg.Data, &event); err != nil {
+		log.Printf("Error unmarshalling event: %v", err)
+		return
+	}
+
+	log.Println("Получено событие отправки рассылки")
+
+	if err := h.botService.NotifyNewMessage(event); err != nil {
 		log.Println("Ошибка при отправке сообщения:", err)
 	}
 

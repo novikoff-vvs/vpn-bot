@@ -16,6 +16,7 @@ type ServiceInterface interface {
 	UserGetByChatId(chatId int64) (models.VpnUser, error)
 	UserGetByEmail(email string) (models.VpnUser, error)
 	ResetClientTraffic(chatId int64) error
+	All() ([]models.VpnUser, error)
 }
 
 type Service struct {
@@ -79,6 +80,9 @@ func (u Service) UserGetByEmail(email string) (models.VpnUser, error) {
 	panic("implement me")
 }
 
+func (u Service) All() ([]models.VpnUser, error) {
+	return u.userRepo.All()
+}
 func (u Service) ResetClientTraffic(chatId int64) error {
 	//TODO implement me
 	panic("implement me")

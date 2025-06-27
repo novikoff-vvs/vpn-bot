@@ -12,6 +12,7 @@ type Config struct {
 	UserService    pkg_config.UserService   `mapstructure:"user_service"`
 	PaymentService PaymentService           `mapstructure:"payment_service"`
 	Nats           pkg_config.NatsPublisher `mapstructure:"nats_publisher"`
+	Database       pkg_config.Database      `mapstructure:"database"`
 }
 
 type Logger struct {

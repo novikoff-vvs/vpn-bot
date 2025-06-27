@@ -1,6 +1,7 @@
 package vpn
 
 import (
+	"fmt"
 	"net/http"
 	"pkg/models"
 	"strconv"
@@ -210,6 +211,7 @@ type UpdateClientRequest struct {
 	TotalGB        int64  `json:"total_gb"`
 	ExpiryTimeUnix int64  `json:"expiry_time_unix"`
 	Enable         bool   `json:"enable"`
+	TgId           string `json:"tg_id"`
 }
 
 func UpdateClient(service vpn.ServiceInterface) gin.HandlerFunc {
@@ -220,13 +222,24 @@ func UpdateClient(service vpn.ServiceInterface) gin.HandlerFunc {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+
 		userUuid := c.Param("uuid")
+		var id int64
+		id, _ = strconv.ParseInt(request.TgId, 10, 64)
+		user, err := service.UserGetByChatId(id)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 		err = service.UpdateClient(userUuid, vpn.UpdateClientDTO{
-			ID:         userUuid,
-			Email:      request.Email,
-			TotalGB:    request.TotalGB,
-			ExpiryTime: request.ExpiryTimeUnix,
-			Enable:     request.Enable,
+			ID:             userUuid,
+			Email:          request.Email,
+			TotalGB:        request.TotalGB,
+			ExpiryTime:     request.ExpiryTimeUnix,
+			Enable:         request.Enable,
+			TgID:           request.TgId,
+			Comment:        fmt.Sprintf("Продлено: %s", time.Now().Format("2006-01-02 15:04:05")),
+			SubscriptionId: user.SubscriptionId,
 		})
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

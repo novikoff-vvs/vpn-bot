@@ -64,12 +64,14 @@ type UpdateClientsDTO struct {
 }
 
 type UpdateClientDTO struct {
-	ID         string `json:"id"`
-	Email      string `json:"email"`
-	TotalGB    int64  `json:"totalGB"`
-	ExpiryTime int64  `json:"expiryTime"`
-	Enable     bool   `json:"enable"`
-	TgID       string `json:"tgId"`
+	ID             string `json:"id"`
+	Email          string `json:"email"`
+	TotalGB        int64  `json:"totalGB"`
+	ExpiryTime     int64  `json:"expiryTime"`
+	Enable         bool   `json:"enable"`
+	TgID           string `json:"tgId"`
+	Comment        string `json:"comment"`
+	SubscriptionId string `json:"subId"`
 }
 
 func (s Service) UpdateClient(userUUID string, dto UpdateClientDTO) error {

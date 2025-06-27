@@ -157,6 +157,14 @@ func (s Service) SyncUsers(UUIDs []string) ([]string, error) {
 	return exiting, nil
 }
 
+func (s Service) All() (users []models.User, err error) {
+	users, err = s.userRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
 func NewUserService(userRepo sqliteUser.UserRepositoryInterface, subscriptionRepo sqliteSubscription.SubscriptionRepositoryInterface) *Service {
 	return &Service{
 		userRepo:         userRepo,

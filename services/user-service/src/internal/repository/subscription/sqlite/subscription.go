@@ -1,7 +1,9 @@
 package sqlite
 
 import (
+	"fmt"
 	gorm2 "gorm.io/gorm"
+	"log"
 	"pkg/infrastructure/DB/gorm"
 	"time"
 	"user-service/internal/models"
@@ -52,6 +54,7 @@ func (r *SubscriptionRepository) GetByUserUUID(userUUID string) (*models.Subscri
 	var sub models.Subscription
 	tx := r.dbService.
 		DB().
+		Unscoped().
 		Where("user_uuid = ?", userUUID).
 		Preload("Plan").
 		Preload("User").
@@ -73,8 +76,11 @@ func (r *SubscriptionRepository) Extend(subscription *models.Subscription) error
 
 func (r *SubscriptionRepository) Deactivate(subscriptionID uint) error {
 	tx := r.dbService.ActiveTx().Model(&models.Subscription{}).
+		Unscoped().
 		Where("id = ?", subscriptionID).
 		Update("is_active", false)
+
+	log.Println(fmt.Sprintf("Sub deactivate Row affected: %d", tx.RowsAffected))
 
 	return tx.Error
 }

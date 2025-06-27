@@ -25,8 +25,6 @@ func (r *UserRepository) RollbackTransaction() error {
 	return r.dbService.Rollback()
 }
 
-// Методы репозитория
-
 func (r *UserRepository) Create(user *models.User) (string, error) {
 	tx := r.dbService.ActiveTx()
 	if tx == nil {
@@ -95,6 +93,17 @@ func (r *UserRepository) GetAllUUIDs(uuids []string) ([]string, error) {
 		Where("uuid NOT IN ?", uuids).
 		Pluck("uuid", &existingUUIDs).Error
 	return existingUUIDs, err
+}
+
+func (r *UserRepository) GetAll() ([]models.User, error) {
+	var users []models.User
+	err := r.dbService.
+		DB().
+		Preload("Subscription").
+		Preload("Subscription.Plan").
+		Unscoped().
+		Model(&users).Find(&users).Error
+	return users, err
 }
 
 func (r *UserRepository) DeleteByUUID(uuid string) error {

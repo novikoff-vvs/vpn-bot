@@ -25,15 +25,34 @@ func (b Builder) GetFirstMessage(msg message) Builder {
 		tg.HTML.Text(
 			tg.HTML.Bold("👋 Добро пожаловать!"),
 			"",
-			tg.HTML.Text("Для завершения регистрация, пожалуйста, пришлите ваш номер телефона."),
-		),
+			"Для завершения регистрации, пожалуйста, пришлите ваш номер телефона.",
+			"",
+			tg.HTML.Italic(
+				"Подтверждая профиль, вы соглашаетесь с "+
+					tg.HTML.Link(
+						"условиями оферты",
+						"https://s.novvs.ru/jlF3K",
+					))),
 	).ParseMode(tg.HTML)
 	return b
 }
 func (b Builder) GetReturnMessage(msg message) Builder {
 	b.sndMsg = msg.Answer(
 		tg.HTML.Text(
-			tg.HTML.Bold("👋 C возвращением!"),
+			tg.HTML.Bold("👋 Добро пожаловать!"),
+			"",
+			tg.HTML.Bold("/start - вызов контекстного меню"),
+			tg.HTML.Bold("/instruction - инструкции по использованию бота"),
+			"",
+			tg.HTML.Bold("@in_golang_we_trust - тех.поддержка"),
+		),
+	).ParseMode(tg.HTML)
+	return b
+}
+func (b Builder) GetInstructionMessage(msg message) Builder {
+	b.sndMsg = msg.Answer(
+		tg.HTML.Text(
+			tg.HTML.Link("Инструкция", "https://s.novvs.ru/BGu42"),
 		),
 	).ParseMode(tg.HTML)
 	return b
@@ -45,6 +64,7 @@ func (b Builder) GetSuccessRegister(msg message, vessaLink string) Builder {
 		tg.HTML.Text(tg.HTML.Bold("🔐 Важно:"), tg.HTML.Blockquote("Эта ссылка является вашим личным доступом.\n\nНикому не передавайте её – это может привести к потере аккаунта.")),
 		"",
 		tg.HTML.Line(tg.HTML.Bold("🔗 Ваша подписка: "), tg.HTML.Link("SUBSCRIPTION-URL", vessaLink)),
+		tg.HTML.Line(tg.HTML.Bold("📚 Инструкции по настройке клиентов:"), tg.HTML.Link("WIKI", "https://s.novvs.ru/BRVz9")),
 	)).ParseMode(tg.HTML)
 	return b
 }

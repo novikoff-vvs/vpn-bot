@@ -17,6 +17,7 @@ func RegisterRoutes(s *http.Server, userService *user.Service, p logger.Interfac
 func registerApi(r *gin.RouterGroup, userService *user.Service) {
 	group := r.Group("/user")
 	{
+		group.GET("/all", All(userService))
 		group.POST("/create", Create(userService))
 		group.POST("/sync-users", SyncUsers(userService))
 

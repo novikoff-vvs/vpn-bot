@@ -39,6 +39,8 @@ type UpdateClientRequest struct {
 	TotalGB        int64  `json:"total_gb"`
 	ExpiryTimeUnix int64  `json:"expiry_time_unix"`
 	Enable         bool   `json:"enable"`
+	TgId           string `json:"tg_id"`
+	Comment        string `json:"comment"`
 }
 
 // UpdateClientResponse - ответ после обновления клиента
@@ -186,7 +188,6 @@ func (c Client) GetByEmail(email string) (*GetVpnUserResponse, error) {
 
 func (c Client) GetSubcLinkByChatId(chatId int64) (*GetSubscriptionLinkResponse, error) {
 	c.lg.Debug(fmt.Sprintf("Getting subscription link  by chat_id: %d", chatId))
-
 	resp, err := c.client.R().
 		SetHeader("Accept", "application/json").
 		SetResult(&GetSubscriptionLinkResponse{}).

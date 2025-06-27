@@ -4,8 +4,10 @@ import (
 	"bot-service/config"
 	"bot-service/internal/bot"
 	"bot-service/internal/handler/nats"
+	"bot-service/internal/migration"
 	"bot-service/internal/repository/http/user"
 	"bot-service/internal/repository/http/vpn"
+	notify_user "bot-service/internal/repository/pgsql/notify-user"
 	"bot-service/internal/singleton"
 	usrService "bot-service/internal/user"
 	"github.com/novikoff-vvs/logger"
@@ -35,6 +37,15 @@ func main() {
 		Type:   zapcore.StringType,
 		String: "Bot-service",
 	})
+
+	db, err := migration.InitDBConnection(cfg.Database)
+	if err != nil {
+		lg.Error(err.Error())
+		return
+	}
+
+	notifyUserRepo := notify_user.NewNotifyUserRepository(db)
+
 	singleton2.NatsPublisherBoot(cfg.Nats)
 
 	userClient := usrClient.NewUserClient(cfg.UserService)
@@ -44,7 +55,7 @@ func main() {
 
 	userService := usrService.NewUserService(vpnRepo, userRepo)
 
-	service := bot.NewService(cfg.BotSettings.Token, userService, vpnRepo)
+	service := bot.NewService(cfg.BotSettings.Token, userService, vpnRepo, notifyUserRepo)
 	var errChan = make(chan error, 1)
 	go func(errChan chan error) {
 		err := service.Run()
