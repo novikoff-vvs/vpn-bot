@@ -1,7 +1,9 @@
 package sqlite
 
 import (
-	grm "gorm.io/gorm"
+	"fmt"
+	gorm2 "gorm.io/gorm"
+	"log"
 	"pkg/infrastructure/DB/gorm"
 	"time"
 	"user-service/internal/models"
@@ -10,8 +12,6 @@ import (
 type SubscriptionRepository struct {
 	dbService *gorm.DBService
 }
-
-// Транзакции
 
 func (r *SubscriptionRepository) BeginTransaction() {
 	r.dbService.Begin()
@@ -25,7 +25,6 @@ func (r *SubscriptionRepository) RollbackTransaction() error {
 	return r.dbService.Rollback()
 }
 
-// Создание новой подписки
 func (r *SubscriptionRepository) Create(subscription *models.Subscription) (uint, error) {
 	tx := r.dbService.ActiveTx().Create(subscription)
 	if tx.Error != nil {
@@ -34,10 +33,14 @@ func (r *SubscriptionRepository) Create(subscription *models.Subscription) (uint
 	return subscription.ID, nil
 }
 
-// Получение активной подписки по UUID пользователя
 func (r *SubscriptionRepository) GetActiveByUserUUID(userUUID string) (*models.Subscription, error) {
 	var sub models.Subscription
-	tx := r.dbService.ActiveTx().Where("user_uuid = ? AND is_active = ? AND expires_at > ?", userUUID, true, time.Now()).
+	tx := r.dbService.
+		ActiveTx().
+		Scopes(ActiveSubscription).
+		Where("user_uuid = ?", userUUID).
+		Preload("Plan").
+		Preload("User").
 		Order("expires_at DESC").
 		First(&sub)
 
@@ -47,20 +50,37 @@ func (r *SubscriptionRepository) GetActiveByUserUUID(userUUID string) (*models.S
 	return &sub, nil
 }
 
-// Продлить подписку (обновить expires_at)
-func (r *SubscriptionRepository) Extend(subscriptionID uint, duration time.Duration) error {
-	tx := r.dbService.ActiveTx().Model(&models.Subscription{}).
-		Where("id = ?", subscriptionID).
-		Update("expires_at", grm.Expr("expires_at + ?", duration))
+func (r *SubscriptionRepository) GetByUserUUID(userUUID string) (*models.Subscription, error) {
+	var sub models.Subscription
+	tx := r.dbService.
+		DB().
+		Unscoped().
+		Where("user_uuid = ?", userUUID).
+		Preload("Plan").
+		Preload("User").
+		Order("expires_at DESC").
+		First(&sub)
+
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	return &sub, nil
+}
+
+func (r *SubscriptionRepository) Extend(subscription *models.Subscription) error {
+	tx := r.dbService.ActiveTx().
+		Create(subscription)
 
 	return tx.Error
 }
 
-// Деактивировать подписку
 func (r *SubscriptionRepository) Deactivate(subscriptionID uint) error {
 	tx := r.dbService.ActiveTx().Model(&models.Subscription{}).
+		Unscoped().
 		Where("id = ?", subscriptionID).
 		Update("is_active", false)
+
+	log.Println(fmt.Sprintf("Sub deactivate Row affected: %d", tx.RowsAffected))
 
 	return tx.Error
 }
@@ -69,4 +89,9 @@ func NewSubscriptionRepository(dbService *gorm.DBService) *SubscriptionRepositor
 	return &SubscriptionRepository{
 		dbService: dbService,
 	}
+}
+
+func ActiveSubscription(db *gorm2.DB) *gorm2.DB {
+	return db.
+		Where("expires_at > ? AND deleted_at is NULL AND is_active = ? ", time.Now(), true)
 }

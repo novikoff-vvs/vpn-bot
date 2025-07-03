@@ -16,6 +16,7 @@ type ServiceInterface interface {
 	UserGetByChatId(chatId int64) (models.VpnUser, error)
 	UserGetByEmail(email string) (models.VpnUser, error)
 	ResetClientTraffic(chatId int64) error
+	All() ([]models.VpnUser, error)
 }
 
 type Service struct {
@@ -54,8 +55,9 @@ func (u Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 	var err error
 	var user models.VpnUser
 	cachedUser, ok := singleton.UserContainer().Get(chatId)
-	user = cachedUser.User
-	if !ok {
+	if ok {
+		user = cachedUser.User
+	} else {
 		user, err = u.userRepo.GetUserByChatId(chatId)
 		if err == nil {
 			return user, nil
@@ -70,7 +72,7 @@ func (u Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 		}
 	}
 
-	return models.VpnUser{}, err
+	return user, err
 }
 
 func (u Service) UserGetByEmail(email string) (models.VpnUser, error) {
@@ -78,6 +80,9 @@ func (u Service) UserGetByEmail(email string) (models.VpnUser, error) {
 	panic("implement me")
 }
 
+func (u Service) All() ([]models.VpnUser, error) {
+	return u.userRepo.All()
+}
 func (u Service) ResetClientTraffic(chatId int64) error {
 	//TODO implement me
 	panic("implement me")

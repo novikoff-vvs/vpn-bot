@@ -25,15 +25,34 @@ func (b Builder) GetFirstMessage(msg message) Builder {
 		tg.HTML.Text(
 			tg.HTML.Bold("👋 Добро пожаловать!"),
 			"",
-			tg.HTML.Text("Для завершения регистрация, пожалуйста, пришлите ваш номер телефона."),
-		),
+			"Для завершения регистрации, пожалуйста, пришлите ваш номер телефона.",
+			"",
+			tg.HTML.Italic(
+				"Подтверждая профиль, вы соглашаетесь с "+
+					tg.HTML.Link(
+						"условиями оферты",
+						"https://s.novvs.ru/jlF3K",
+					))),
 	).ParseMode(tg.HTML)
 	return b
 }
 func (b Builder) GetReturnMessage(msg message) Builder {
 	b.sndMsg = msg.Answer(
 		tg.HTML.Text(
-			tg.HTML.Bold("👋 C возвращением!"),
+			tg.HTML.Bold("👋 Добро пожаловать!"),
+			"",
+			tg.HTML.Bold("/start - вызов контекстного меню"),
+			tg.HTML.Bold("/instruction - инструкции по использованию бота"),
+			"",
+			tg.HTML.Bold("@in_golang_we_trust - тех.поддержка"),
+		),
+	).ParseMode(tg.HTML)
+	return b
+}
+func (b Builder) GetInstructionMessage(msg message) Builder {
+	b.sndMsg = msg.Answer(
+		tg.HTML.Text(
+			tg.HTML.Link("Инструкция", "https://s.novvs.ru/BGu42"),
 		),
 	).ParseMode(tg.HTML)
 	return b
@@ -45,6 +64,7 @@ func (b Builder) GetSuccessRegister(msg message, vessaLink string) Builder {
 		tg.HTML.Text(tg.HTML.Bold("🔐 Важно:"), tg.HTML.Blockquote("Эта ссылка является вашим личным доступом.\n\nНикому не передавайте её – это может привести к потере аккаунта.")),
 		"",
 		tg.HTML.Line(tg.HTML.Bold("🔗 Ваша подписка: "), tg.HTML.Link("SUBSCRIPTION-URL", vessaLink)),
+		tg.HTML.Line(tg.HTML.Bold("📚 Инструкции по настройке клиентов:"), tg.HTML.Link("WIKI", "https://s.novvs.ru/BRVz9")),
 	)).ParseMode(tg.HTML)
 	return b
 }
@@ -65,24 +85,21 @@ func (b Builder) AddRequestContactKeyboard() Builder {
 	b.sndMsg.ReplyMarkup(inlineKeyboard)
 	return b
 }
-func (b Builder) AddRequestMainMenuKeyboard() Builder {
+func (b Builder) AddRequestMainMenuKeyboard(uuid string) Builder {
 
-	b.sndMsg.ReplyMarkup(b.GetMainMenuKeyboad())
+	b.sndMsg.ReplyMarkup(b.GetMainMenuKeyboad(uuid))
 	return b
 }
-func (b Builder) GetPaymentMenuKeyboard(uuid string) *tg.ReplyKeyboardMarkup {
-	webAppButton :=
-		tg.NewKeyboardButtonWebApp("Открыть приложение",
-			tg.WebAppInfo{
-				URL: fmt.Sprintf("%sweb/yoomoney/%s", b.cfg.Url, uuid), // Замените на URL вашего WebApp
-
-			})
-
-	replyMarkup := tg.NewReplyKeyboardMarkup(
-		[]tg.KeyboardButton{webAppButton},
-	).WithResizeKeyboardMarkup()
-
-	return replyMarkup
+func (b Builder) GetPaymentMenuKeyboard(uuid string) tg.InlineKeyboardMarkup {
+	return tg.NewInlineKeyboardMarkup(
+		[]tg.InlineKeyboardButton{
+			{
+				Text: "💸 Оплата",
+				WebApp: &tg.WebAppInfo{
+					URL: fmt.Sprintf("%sweb/yoomoney/%s", b.cfg.Url, uuid),
+				},
+			},
+		})
 }
 func (b Builder) RemoveKeyboard() Builder {
 	b.sndMsg = b.sndMsg.ReplyMarkup(tg.NewReplyKeyboardRemove())
@@ -91,17 +108,13 @@ func (b Builder) RemoveKeyboard() Builder {
 func (b Builder) Build() *tg.SendMessageCall {
 	return b.sndMsg
 }
-func (b Builder) GetMainMenuKeyboad() tg.InlineKeyboardMarkup {
+func (b Builder) GetMainMenuKeyboad(uuid string) tg.InlineKeyboardMarkup {
+	keyboard := b.GetPaymentMenuKeyboard(uuid).InlineKeyboard
 	return tg.NewInlineKeyboardMarkup(
 		[]tg.InlineKeyboardButton{
 			{
 				Text:         "🔗 Моя ссылка",
 				CallbackData: "get_link",
 			},
-			{
-				Text:         "💸 Оплата",
-				CallbackData: "payment",
-			},
-		})
-
+		}, keyboard[0])
 }

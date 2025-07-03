@@ -7,7 +7,9 @@ import (
 type Config struct {
 	Logger      Logger                 `mapstructure:"logger"`
 	Base        Base                   `mapstructure:"base"`
+	Crypto      Crypto                 `mapstructure:"crypto"`
 	UserService pkg_config.UserService `mapstructure:"user_service"`
+	Database    pkg_config.Database    `mapstructure:"database"`
 }
 
 type Logger struct {
@@ -17,7 +19,12 @@ type Logger struct {
 }
 
 type Base struct {
-	AppPort string `mapstructure:"app_port"`
+	AppPort       string `mapstructure:"app_port"`
+	PaymentSecret string `mapstructure:"payment_secret"`
+}
+
+type Crypto struct {
+	Key string `mapstructure:"key"`
 }
 
 func LoadConfigs() (*Config, error) {

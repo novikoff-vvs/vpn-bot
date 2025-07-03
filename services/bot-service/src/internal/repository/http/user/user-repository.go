@@ -12,6 +12,7 @@ type RepositoryInterface interface {
 	GetUser(id string) (models.VpnUser, error)
 	GetUserByChatId(chatId int64) (models.VpnUser, error)
 	CreateUser(user *models.VpnUser) error
+	All() ([]models.VpnUser, error)
 }
 
 type HTTPUserRepository struct {
@@ -58,4 +59,21 @@ func (r *HTTPUserRepository) CreateUser(user *models.VpnUser) error {
 	}
 
 	return nil
+}
+
+func (r *HTTPUserRepository) All() ([]models.VpnUser, error) {
+	var req, err = r.client.All()
+	var result []models.VpnUser
+	if err != nil {
+		return result, err
+	}
+	for _, user := range req.Result {
+		result = append(result, models.VpnUser{
+			ChatId: int64(user.ChatId),
+			Email:  user.Email,
+			UUID:   user.UUID,
+		})
+	}
+
+	return result, nil
 }

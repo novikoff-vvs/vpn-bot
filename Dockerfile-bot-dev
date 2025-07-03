@@ -1,0 +1,26 @@
+ARG SERVICE_NAME=${SERVICE_NAME}
+FROM --platform=linux/amd64 golang:1.23-alpine3.21 as build
+ARG SERVICE_NAME
+
+WORKDIR /app
+
+# Устанавливаем зависимые утилиты
+RUN apk --no-cache --update add build-base
+
+# Копируем весь контекст
+COPY ./services .
+COPY ./services/go.work ./go.work
+COPY ./services/${SERVICE_NAME}/src/go.mod /app/${SERVICE_NAME}/src/go.mod
+COPY ./services/${SERVICE_NAME}/src/go.sum /app/${SERVICE_NAME}/src/go.sum
+COPY ./services/${SERVICE_NAME}/.air.toml /app/${SERVICE_NAME}/.air.toml
+
+# Переход в нужный сервис
+WORKDIR /app/${SERVICE_NAME}/src
+
+RUN go install github.com/air-verse/air@latest
+
+WORKDIR /app/${SERVICE_NAME}
+
+RUN go mod download
+
+CMD air

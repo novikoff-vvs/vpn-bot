@@ -14,7 +14,18 @@ user_service:
 
 base:
   app_port: 8080
+  payment_secret: oSFfPPGpViBbGpOhRBWDOfEb
 
 bot_settings:
   token:
 
+database:
+  path: database/user_service.db
+  host:
+  user:
+  password:
+  db:
+  port:
+
+crypto:
+  key:

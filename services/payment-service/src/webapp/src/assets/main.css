@@ -1,8 +1,0 @@
-@import './base.css';
-@import './card.css';
-@import './btn.css';
-
-body {
-    color: var( --text-color);
-    background: var(--bg-color); font-family: 'Arial', sans-serif; padding: 20px;
-}

@@ -21,7 +21,6 @@ func InitDBConnection(cfg config.Database) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	// Добавим тарифы, если они ещё не добавлены
 	if err := seeds.SeedPlans(db); err != nil {
 		return nil, err
 	}

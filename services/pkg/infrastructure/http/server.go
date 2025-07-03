@@ -75,6 +75,9 @@ func NewServer(log logger.Interface) *Server {
 
 	apiGroup := r.Group("/api")
 	webGroup := r.Group("/web")
+	r.GET("/", func(c *gin.Context) {
+		c.Redirect(http.StatusMovedPermanently, "https://t.me/nvs_vpn_3x_bot")
+	})
 	return &Server{
 		r:        r,
 		log:      log,

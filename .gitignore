@@ -7,3 +7,5 @@
 /services/payment-service/.env
 /.docker/db_data/
 /services/vpn-service/.env
+/.env
+/.docker/nui/

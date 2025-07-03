@@ -33,6 +33,21 @@ type ExistsResponse struct {
 	Exists bool `json:"exists"`
 }
 
+// UpdateClientRequest - запрос на обновление клиента VPN (аналогичен структуре в контроллере)
+type UpdateClientRequest struct {
+	Email          string `json:"email"`
+	TotalGB        int64  `json:"total_gb"`
+	ExpiryTimeUnix int64  `json:"expiry_time_unix"`
+	Enable         bool   `json:"enable"`
+	TgId           string `json:"tg_id"`
+	Comment        string `json:"comment"`
+}
+
+// UpdateClientResponse - ответ после обновления клиента
+type UpdateClientResponse struct {
+	Result string `json:"result"` // например, "updated" (как в контроллере)
+}
+
 type Client struct {
 	client *resty.Client
 	cfg    config.VpnService
@@ -173,7 +188,6 @@ func (c Client) GetByEmail(email string) (*GetVpnUserResponse, error) {
 
 func (c Client) GetSubcLinkByChatId(chatId int64) (*GetSubscriptionLinkResponse, error) {
 	c.lg.Debug(fmt.Sprintf("Getting subscription link  by chat_id: %d", chatId))
-
 	resp, err := c.client.R().
 		SetHeader("Accept", "application/json").
 		SetResult(&GetSubscriptionLinkResponse{}).
@@ -196,6 +210,30 @@ func (c Client) GetSubcLinkByChatId(chatId int64) (*GetSubscriptionLinkResponse,
 	}
 
 	return resp.Result().(*GetSubscriptionLinkResponse), nil
+}
+
+// UpdateClient - обновляет данные VPN-клиента по UUID
+func (c Client) UpdateClient(uuid string, req UpdateClientRequest) (*UpdateClientResponse, error) {
+	c.lg.Debug(fmt.Sprintf("Updating VPN client: UUID=%s, Request=%+v", uuid, req))
+
+	resp, err := c.client.R().
+		SetHeader("Accept", "application/json").
+		SetBody(req).
+		SetResult(&UpdateClientResponse{}).
+		Put(fmt.Sprintf("/vpn/by-uuid/%s/update-client", uuid)) // предполагается, что эндпоинт такой же, как в контроллере
+
+	if err != nil {
+		c.lg.Error("update client request failed: " + err.Error())
+		return nil, err
+	}
+
+	if resp.IsError() {
+		errMsg := fmt.Sprintf("update client failed with status %d: %s", resp.StatusCode(), resp.String())
+		c.lg.Error(errMsg)
+		return nil, errors.New(errMsg)
+	}
+
+	return resp.Result().(*UpdateClientResponse), nil
 }
 
 func (c Client) Close() error {

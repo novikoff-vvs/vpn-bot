@@ -11,8 +11,21 @@ type UserService struct {
 	Url string `mapstructure:"url"`
 }
 
+type NatsPublisher struct {
+	Url string `mapstructure:"url"`
+}
+
 type VpnService struct {
 	Url string `mapstructure:"url"`
+}
+
+type Database struct {
+	Path     string `mapstructure:"PATH"`
+	Host     string `mapstructure:"HOST"`
+	User     string `mapstructure:"USER"`
+	Password string `mapstructure:"PASSWORD"`
+	DB       string `mapstructure:"DB"`
+	Port     string `mapstructure:"PORT"`
 }
 
 func GetViper() *viper.Viper {

@@ -5,14 +5,20 @@ import (
 	"github.com/novikoff-vvs/logger"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"os"
 	"pkg/infrastructure/DB/gorm"
 	"pkg/infrastructure/http"
+	"pkg/singleton"
 	"user-service/config"
 	"user-service/docs"
+	"user-service/internal/controller/subscription"
 	"user-service/internal/controller/user"
 	"user-service/internal/migration"
+	"user-service/internal/plan"
+	"user-service/internal/repository/plan/sqlite"
 	sqliteSubscription "user-service/internal/repository/subscription/sqlite"
 	sqliteUser "user-service/internal/repository/user/sqlite"
+	subscription2 "user-service/internal/subscription"
 	user2 "user-service/internal/user"
 )
 
@@ -34,9 +40,14 @@ func main() {
 	LoggingService, err = logger.NewZapLogger(cfg.Logger.Path, cfg.Logger.Name, cfg.Logger.IsOutput)
 	if err != nil {
 		fmt.Println("Error initializing logger: ", err)
+		//todo Везде сделать os.Exit()
+		os.Exit(1)
 		return
 	}
+
 	LoggingService.Info("Initializing app")
+	singleton.VpnClientBoot(cfg.VpnService, LoggingService)
+	singleton.NatsPublisherBoot(cfg.NatsPublisher)
 
 	db, err := migration.InitDBConnection(cfg.Database)
 	if err != nil {
@@ -50,6 +61,9 @@ func main() {
 	subscrRepo := sqliteSubscription.NewSubscriptionRepository(newDatabaseService)
 
 	userService := user2.NewUserService(userRepo, subscrRepo)
+	planService := plan.NewPlanService(sqlite.NewPlanRepository(newDatabaseService))
+	subscriptionRepo := sqliteSubscription.NewSubscriptionRepository(newDatabaseService)
+	subscriptionService := subscription2.NewSubscriptionService(subscriptionRepo, planService, singleton.VpnClient())
 
 	s := http.NewServer(LoggingService)
 
@@ -65,6 +79,7 @@ func main() {
 	}
 
 	user.RegisterRoutes(s, userService, LoggingService)
+	subscription.RegisterRoutes(s, subscriptionService)
 	err = s.Run(cfg.Base.AppPort)
 	if err != nil {
 		LoggingService.Error(err.Error())

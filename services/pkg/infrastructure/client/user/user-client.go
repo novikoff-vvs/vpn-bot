@@ -1,10 +1,12 @@
 package user
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"pkg/config"
 	"pkg/exceptions"
+	response2 "pkg/infrastructure/client/user/response"
 	"resty.dev/v3"
 )
 
@@ -20,6 +22,10 @@ type GetUserByChatIdRequest struct {
 
 type GetUserByUUIDRequest struct {
 	UUID string `json:"uuid"`
+}
+
+type SyncUsersRequest struct {
+	UUIDs []string `json:"uuids"`
 }
 
 type Client struct {
@@ -38,7 +44,6 @@ func (c Client) Create(req CreateUserRequest) (*resty.Response, error) {
 	}
 	return response, nil
 }
-
 func (c Client) GetByChatID(req GetUserByChatIdRequest) (*resty.Response, error) {
 	// TODO: добавить логирование
 	response, err := c.client.R().
@@ -81,7 +86,44 @@ func (c Client) GetUserByUUID(req GetUserByUUIDRequest) (*resty.Response, error)
 
 	return response, nil
 }
+func (c Client) SyncUsers(req SyncUsersRequest) (*resty.Response, error) {
+	// TODO: добавить логирование
+	response, err := c.client.R().SetBody(req).Post("user/sync-users")
 
+	if err != nil {
+		return nil, err
+	}
+
+	if response.StatusCode() == 404 {
+		return nil, exceptions.ErrModelNotFound
+	}
+
+	if response.IsError() {
+		return nil, fmt.Errorf("unexpected status: %d, body: %s", response.StatusCode(), response.String())
+	}
+
+	return response, nil
+}
+func (c Client) All() (response2.AllResponse, error) {
+	// TODO: добавить логирование
+	response, err := c.client.R().Get("user/all")
+
+	if err != nil {
+		return response2.AllResponse{}, err
+	}
+
+	if response.IsError() {
+		return response2.AllResponse{}, fmt.Errorf("unexpected status: %d, body: %s", response.StatusCode(), response.String())
+	}
+	var resp response2.AllResponse
+	err = json.Unmarshal(response.Bytes(), &resp)
+
+	if err != nil {
+		return response2.AllResponse{}, err
+	}
+
+	return resp, nil
+}
 func (c Client) Close() error {
 	err := c.client.Close()
 	if err != nil {

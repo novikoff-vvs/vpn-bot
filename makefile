@@ -2,6 +2,13 @@
 SERVICES ?= bot-service=./services/bot-service/ user-service=./services/bot-service/
 export PATH=$PATH:$(go env GOPATH)/bin
 
+REMOTE_USER := root
+REMOTE_HOST := 31.128.33.96
+REMOTE_PATH := /app/bot-deploy
+
+deploy:
+	ssh $(REMOTE_USER)@$(REMOTE_HOST) "cd $(REMOTE_PATH) && docker compose pull && docker compose up -d --build --force-recreate"
+
 build-bot:
 	bash ./build.sh
 

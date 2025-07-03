@@ -14,3 +14,9 @@ database:
   password:
   db:
   port:
+
+nats_publisher:
+  url:
+
+vpn_service:
+  url:

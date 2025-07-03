@@ -3,6 +3,13 @@ logger:
   name: "vpn-bot"
   is_output: false
 
+database:
+  host:
+  user:
+  password:
+  db:
+  port:
+
 user_service:
   url:
 
@@ -17,4 +24,7 @@ bot_settings:
 
 base:
   app_port:
+
+nats_publisher:
+  url:
 

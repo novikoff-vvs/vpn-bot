@@ -17,16 +17,20 @@ func RegisterRoutes(s *http.Server, userService *user.Service, p logger.Interfac
 func registerApi(r *gin.RouterGroup, userService *user.Service) {
 	group := r.Group("/user")
 	{
+		group.GET("/all", All(userService))
 		group.POST("/create", Create(userService))
+		group.POST("/sync-users", SyncUsers(userService))
+
 		groupByUUID := group.Group(":uuid")
 		{
 			groupByUUID.GET("/short", GetShortUser(userService))
-			groupByUUID.GET("/", GetUser(userService))
+			groupByUUID.GET("", GetUser(userService))
+			groupByUUID.DELETE("", DeleteUserByChatId(userService))
 		}
 
-		groupByChatId := group.Group("by-chat")
+		groupByChatId := group.Group("by-chat/:chatId")
 		{
-			groupByChatId.GET(":chatId", GetUserByChatId(userService))
+			groupByChatId.GET("", GetUserByChatId(userService))
 		}
 	}
 }

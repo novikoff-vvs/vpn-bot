@@ -6,6 +6,7 @@ import (
 	"github.com/novikoff-vvs/xui"
 	"github.com/novikoff-vvs/xui/dto"
 	"github.com/novikoff-vvs/xui/requests"
+	"log"
 	"pkg/exceptions"
 	"pkg/models"
 	"strconv"
@@ -20,6 +21,8 @@ type ServiceInterface interface {
 	UserGetByEmail(email string) (models.VpnUser, error)
 	ResetClientTraffic(chatId int64) error
 	GetAllUsers() ([]models.VpnUser, error)
+	UpdateClient(userUUID string, dto UpdateClientDTO) error
+	UserGetByChatUUID(uuid string) (models.VpnUser, error)
 }
 
 type Service struct {
@@ -54,6 +57,34 @@ func (s Service) UserExistsByChatId(chatId int64) bool {
 	}
 
 	return false
+}
+
+type UpdateClientsDTO struct {
+	Clients []UpdateClientDTO `json:"clients"`
+}
+
+type UpdateClientDTO struct {
+	ID             string `json:"id"`
+	Email          string `json:"email"`
+	TotalGB        int64  `json:"totalGB"`
+	ExpiryTime     int64  `json:"expiryTime"`
+	Enable         bool   `json:"enable"`
+	TgID           string `json:"tgId"`
+	Comment        string `json:"comment"`
+	SubscriptionId string `json:"subId"`
+}
+
+func (s Service) UpdateClient(userUUID string, dto UpdateClientDTO) error {
+	marshal, err := json.Marshal(UpdateClientsDTO{Clients: []UpdateClientDTO{dto}})
+	if err != nil {
+		return err
+	}
+	log.Println(string(marshal))
+	err = s.client.UpdateClient(userUUID, s.cfg.InboundID, string(marshal))
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s Service) UserRegisterByChatId(user *models.VpnUser, comment string) error {
@@ -104,6 +135,28 @@ func (s Service) UserGetByChatId(chatId int64) (models.VpnUser, error) {
 	for _, client := range inbound.GetSettings().Clients {
 		id, _ := client.TgId.Int64()
 		if id == chatId {
+			return models.VpnUser{
+				ChatId:         id,
+				Email:          client.Email,
+				UUID:           client.Id,
+				SubscriptionId: client.SubId,
+			}, nil
+		}
+	}
+
+	return models.VpnUser{}, exceptions.ErrModelNotFound
+}
+
+func (s Service) UserGetByChatUUID(uuid string) (models.VpnUser, error) {
+	inbound, err := s.client.GetInbound(s.cfg.InboundID)
+	if err != nil {
+		s.lg.Error(err.Error())
+		return models.VpnUser{}, err
+	}
+
+	for _, client := range inbound.GetSettings().Clients {
+		id, _ := client.TgId.Int64()
+		if client.Id == uuid {
 			return models.VpnUser{
 				ChatId:         id,
 				Email:          client.Email,
