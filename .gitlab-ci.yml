@@ -1,0 +1,43 @@
+stages:
+  - build
+  - push
+
+variables:
+  BASE_IMAGE_NAME: "vpn-bot"
+  TAG: "latest"
+  DOCKER_DRIVER: overlay2
+
+# Шаблон job-а
+.build_and_push_template: &build_and_push
+  image: docker:latest
+  services:
+    - docker:dind
+  stage: build
+  script:
+    - echo "Сборка и пуш $CI_REGISTRY_IMAGE/$BASE_IMAGE_NAME-$SERVICE_NAME:$TAG"
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME \
+      -t "$CI_REGISTRY_IMAGE/$BASE_IMAGE_NAME-$SERVICE_NAME:$TAG" \
+      -f ./Dockerfile-$SERVICE_NAME .
+    - docker push "$CI_REGISTRY_IMAGE/$BASE_IMAGE_NAME-$SERVICE_NAME:$TAG"
+
+# Jobs по сервисам
+build_bot_service:
+  <<: *build_and_push
+  variables:
+    SERVICE_NAME: "bot-service"
+
+build_user_service:
+  <<: *build_and_push
+  variables:
+    SERVICE_NAME: "user-service"
+
+build_payment_service:
+  <<: *build_and_push
+  variables:
+    SERVICE_NAME: "payment-service"
+
+build_vpn_service:
+  <<: *build_and_push
+  variables:
+    SERVICE_NAME: "vpn-service"
