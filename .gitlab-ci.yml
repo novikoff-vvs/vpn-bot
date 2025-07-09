@@ -24,12 +24,6 @@ build:
     - docker info  # отладка
     - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
-
-push:
-  stage: push
-  tags:
-    - build
-  script:
     - docker push "$IMAGE_NAME:latest"
   only:
     - main
