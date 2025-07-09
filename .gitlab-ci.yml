@@ -19,13 +19,18 @@ build_single_service:
   stage: build
   tags:
     - build
+  variables:
+    DOCKER_BUILDKIT: 1
+  before_script:
+    - docker buildx create --use
+    - docker buildx inspect --bootstrap
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $REGISTRY
   script:
     - IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
-    - docker build \
+    - docker buildx build \
       --build-arg SERVICE_NAME="$SERVICE_NAME" \
       -t "$REGISTRY/$IMAGE_NAME:$TAG" \
       -f ./Dockerfile-$SERVICE_NAME \
-      .
-    - docker push "$REGISTRY/$IMAGE_NAME:$TAG"
+      --push .  # Added --push to push directly
   only:
     - main
