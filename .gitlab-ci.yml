@@ -12,8 +12,9 @@ default:
   services:
     - docker:dind
   before_script:
-    - export DOCKER_BUILDKIT=0
-    - apk add --no-cache bash
+    - mkdir -p ~/.docker
+    - echo '{"credsStore":"pass"}' > ~/.docker/config.json
+    - apk add --no-cache bash pass
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $REGISTRY
 
 build_single_service:
@@ -21,7 +22,6 @@ build_single_service:
   tags:
     - build
   script:
-    - export DOCKER_BUILDKIT=0
     - IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
     - docker build \
       --build-arg SERVICE_NAME="$SERVICE_NAME" \
@@ -32,4 +32,3 @@ build_single_service:
     - docker push "$REGISTRY/$IMAGE_NAME:$TAG"
   only:
     - main
-
