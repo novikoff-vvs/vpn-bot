@@ -6,7 +6,10 @@ services:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-  SERVICE_NAME: bot-service
+  BOT_SERVICE_NAME: bot_service
+  PAYMENT_SERVICE_NAME: payment_service
+  USER_SERVICE_NAME: user_service
+  VPN_SERVICE_NAME: bot_service
   DOCKER_TLS_CERTDIR: ""  # Отключает TLS, упрощает соединение с dind
 
 stages:
@@ -22,46 +25,43 @@ build-bot-service:
     - build
   script:
     - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
+    - docker build --build-arg SERVICE_NAME=$BOT_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
     - docker push "$IMAGE_NAME:latest"
   only:
     - main
     - master
-
 build-payment-service:
   stage: build
   tags:
     - build
   script:
     - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-payment-service .
+    - docker build --build-arg SERVICE_NAME=$PAYMENT_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-payment-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
     - docker push "$IMAGE_NAME:latest"
   only:
     - main
     - master
-
 build-user-service:
   stage: build
   tags:
     - build
   script:
     - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-user-service .
+    - docker build --build-arg SERVICE_NAME=$USER_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-user-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
     - docker push "$IMAGE_NAME:latest"
   only:
     - main
     - master
-
 build-vpn-service:
   stage: build
   tags:
     - build
   script:
     - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-vpn-service .
+    - docker build --build-arg SERVICE_NAME=$VPN_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-vpn-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
     - docker push "$IMAGE_NAME:latest"
   only:
