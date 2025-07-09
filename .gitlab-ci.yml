@@ -6,6 +6,7 @@ variables:
   BASE_IMAGE_NAME: "vpn-bot"
   TAG: "latest"
   DOCKER_DRIVER: overlay2
+  DOCKER_CONFIG: "/root/.docker"
 
 # Шаблон job-а
 .build_and_push_template: &build_and_push
@@ -17,7 +18,11 @@ variables:
     - build
   script:
     - echo "Сборка и пуш $CI_REGISTRY_IMAGE/$BASE_IMAGE_NAME-$SERVICE_NAME:$TAG"
+    # Настройка docker credential helper (убирает предупреждение)
+    - mkdir -p /root/.docker
+    - echo '{ "credsStore": "desktop" }' > /root/.docker/config.json
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    # Сборка и пуш образа
     - docker build --build-arg SERVICE_NAME=$SERVICE_NAME \
       -t "$CI_REGISTRY_IMAGE/$BASE_IMAGE_NAME-$SERVICE_NAME:$TAG" \
       -f ./Dockerfile-$SERVICE_NAME .
