@@ -6,6 +6,7 @@ services:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+  SERVICE_NAME: bot-service
   DOCKER_TLS_CERTDIR: ""  # Отключает TLS, упрощает соединение с dind
 
 stages:
@@ -21,7 +22,7 @@ build:
     - build
   script:
     - docker info  # отладка
-    - docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
+    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
 
 push:
