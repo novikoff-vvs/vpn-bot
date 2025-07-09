@@ -1,13 +1,6 @@
-image: docker:24.0.7
-
-services:
-  - name: docker:24.0.7-dind
-    alias: docker
+image: docker:latest
 
 variables:
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_DRIVER: overlay2
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
 
@@ -23,7 +16,6 @@ build:
   tags:
     - build
   script:
-    - docker info
     - docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
 
