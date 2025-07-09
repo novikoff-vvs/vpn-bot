@@ -5,7 +5,7 @@ variables:
   BASE_IMAGE_NAME: "vpn-bot"
   TAG: "latest"
   REGISTRY: "registry.vladislav-novikov.ru"
-  SERVICE_NAME: "bot-service"  # Можно изменить в настройках GitLab или в самом пайплайне
+  SERVICE_NAME: "bot-service"
 
 default:
   image: docker:latest
@@ -17,9 +17,11 @@ default:
 
 build_single_service:
   stage: build
+  tags:
+    - build
   script:
     - IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
-    - echo "Building image for service $SERVICE_NAME ..."
+    - echo "Building image for service $SERVICE_NAME with tag: $TAG ..."
     - docker build \
       --build-arg SERVICE_NAME="$SERVICE_NAME" \
       -t "$REGISTRY/$IMAGE_NAME:$TAG" \
