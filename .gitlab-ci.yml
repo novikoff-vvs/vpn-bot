@@ -6,10 +6,10 @@ services:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-  BOT_SERVICE_NAME: bot_service
-  PAYMENT_SERVICE_NAME: payment_service
-  USER_SERVICE_NAME: user_service
-  VPN_SERVICE_NAME: bot_service
+  BOT_SERVICE_NAME: bot-service
+  PAYMENT_SERVICE_NAME: payment-service
+  USER_SERVICE_NAME: user-service
+  VPN_SERVICE_NAME: vpn-service
   DOCKER_TLS_CERTDIR: ""  # Отключает TLS, упрощает соединение с dind
 
 stages:
