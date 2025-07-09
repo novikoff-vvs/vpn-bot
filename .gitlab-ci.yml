@@ -17,6 +17,8 @@ before_script:
 
 build:
   stage: build
+  tags:
+    - build
   script:
     - docker build -t "$IMAGE_NAME:$IMAGE_TAG" ./Dockerfile-bot-service
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
@@ -25,6 +27,8 @@ build:
 
 push:
   stage: push
+  tags:
+    - build
   script:
     - docker push "$IMAGE_NAME:$IMAGE_TAG"
     - docker push "$IMAGE_NAME:latest"
