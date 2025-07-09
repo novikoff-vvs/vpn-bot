@@ -26,8 +26,8 @@ build-bot-service:
   script:
     - docker info  # отладка
     - docker build --build-arg SERVICE_NAME=$BOT_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
-    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
-    - docker push "$IMAGE_NAME:latest"
+    - docker tag "$BOT_SERVICE_NAME:latest"
+    - docker push "$BOT_SERVICE_NAME:latest"
   only:
     - main
     - master
@@ -38,8 +38,8 @@ build-payment-service:
   script:
     - docker info  # отладка
     - docker build --build-arg SERVICE_NAME=$PAYMENT_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-payment-service .
-    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
-    - docker push "$IMAGE_NAME:latest"
+    - docker tag "$PAYMENT_SERVICE_NAME:latest"
+    - docker push "$PAYMENT_SERVICE_NAME:latest"
   only:
     - main
     - master
@@ -50,8 +50,8 @@ build-user-service:
   script:
     - docker info  # отладка
     - docker build --build-arg SERVICE_NAME=$USER_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-user-service .
-    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
-    - docker push "$IMAGE_NAME:latest"
+    - docker tag "$USER_SERVICE_NAME:latest"
+    - docker push "$USER_SERVICE_NAME:latest"
   only:
     - main
     - master
@@ -62,8 +62,8 @@ build-vpn-service:
   script:
     - docker info  # отладка
     - docker build --build-arg SERVICE_NAME=$VPN_SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-vpn-service .
-    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
-    - docker push "$IMAGE_NAME:latest"
+    - docker tag "$VPN_SERVICE_NAME:latest"
+    - docker push "$VPN_SERVICE_NAME:latest"
   only:
     - main
     - master
