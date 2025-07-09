@@ -5,46 +5,27 @@ variables:
   BASE_IMAGE_NAME: "vpn-bot"
   TAG: "latest"
   REGISTRY: "registry.vladislav-novikov.ru"
+  SERVICE_NAME: "bot-service"  # Можно изменить в настройках GitLab или в самом пайплайне
 
-# По умолчанию билдим все сервисы, но можно переопределить переменную SERVICES в настройках пайплайна
-# Пример: SERVICES="bot-service vpn-service"
 default:
   image: docker:latest
-  tags:
-    - build
   services:
     - docker:dind
   before_script:
     - apk add --no-cache bash
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $REGISTRY
 
-build_services:
+build_single_service:
   stage: build
-  tags:
-    - build
   script:
-    - |
-      ALL_SERVICES=("bot-service" "user-service" "payment-service" "vpn-service")
-
-      # Если SERVICES не задан — берем все сервисы
-      if [ -z "$SERVICES" ]; then
-        SERVICES="${ALL_SERVICES[*]}"
-      fi
-
-      # Разбиваем SERVICES на массив
-      read -r -a SERVICES_ARRAY <<< "$SERVICES"
-
-      for SERVICE_NAME in "${SERVICES_ARRAY[@]}"; do
-        IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
-        echo "Building image for $SERVICE_NAME ..."
-        docker build \
-          --build-arg SERVICE_NAME="$SERVICE_NAME" \
-          -t "$REGISTRY/$IMAGE_NAME:$TAG" \
-          -f ./Dockerfile-$SERVICE_NAME \
-          .
-
-        echo "Pushing image $REGISTRY/$IMAGE_NAME:$TAG ..."
-        docker push "$REGISTRY/$IMAGE_NAME:$TAG"
-      done
+    - IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
+    - echo "Building image for service $SERVICE_NAME ..."
+    - docker build \
+      --build-arg SERVICE_NAME="$SERVICE_NAME" \
+      -t "$REGISTRY/$IMAGE_NAME:$TAG" \
+      -f ./Dockerfile-$SERVICE_NAME \
+      .
+    - echo "Pushing image $REGISTRY/$IMAGE_NAME:$TAG ..."
+    - docker push "$REGISTRY/$IMAGE_NAME:$TAG"
   only:
     - main
