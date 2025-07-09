@@ -16,6 +16,11 @@ build:
   stage: build
   tags:
     - build
+  services:
+    - docker:24.0.5-dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   script:
     - echo "$CI_REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $CI_REGISTRY_USER --password-stdin
     - docker build -t $IMAGE_FULL_PATH -f ./Dockerfile-bot-service .
