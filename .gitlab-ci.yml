@@ -18,9 +18,7 @@ build:
     - build
   services:
     - name: docker:24.0.5-dind
-      alias: docker  # Makes it accessible at hostname "docker"
   script:
-    - docker info  # Verify connection
     - echo "$CI_REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $CI_REGISTRY_USER --password-stdin
     - docker build -t $IMAGE_FULL_PATH -f ./Dockerfile-bot-service .
     - docker push $IMAGE_FULL_PATH
