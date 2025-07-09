@@ -2,26 +2,19 @@ stages:
   - build
   - push
 
-variables:
-  IMAGE_NAME: "bot-service"
-  IMAGE_TAG: "latest"
-  # Указываем полный путь до вашего реестра
-  REGISTRY_URL: "registry.vladislav-novikov.ru"
-  # Полный путь до образа в вашем реестре
-  IMAGE_FULL_PATH: "$REGISTRY_URL/$CI_PROJECT_PATH/$IMAGE_NAME:$IMAGE_TAG"
 
-build-image:
+build:
+  image: docker:24.0.5
   stage: build
-  image: docker:24.0
   tags:
     - build
   services:
-    - docker:24.0-dind
-  before_script:
-    # Безопасный логин через stdin
-    - echo "$REGISTRY_PASSWORD" | docker login -u "$REGISTRY_USER" --password-stdin "$REGISTRY_URL"
+    - docker:24.0.5-dind
+  variables:
+    IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
   script:
-    - docker build -f Dockerfile-bot-service -t $IMAGE_FULL_PATH .
-    - docker push $IMAGE_FULL_PATH
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    - docker build -t $IMAGE_TAG ./Dockerfile-bot-service
+    - docker push $IMAGE_TAG
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
