@@ -25,7 +25,6 @@ before_script:
     - master
   script:
     - docker info
-    - echo "Building service: $SERVICE_NAME"
     - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$SERVICE_NAME-$IMAGE_TAG" -f $DOCKERFILE .
     - docker push "$IMAGE_NAME:$SERVICE_NAME-$IMAGE_TAG"
     - docker tag "$IMAGE_NAME:$SERVICE_NAME-$IMAGE_TAG" "$IMAGE_NAME:$SERVICE_NAME-latest"
