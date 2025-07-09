@@ -1,9 +1,12 @@
 image: docker:latest
 
 services:
-  - docker:dind
+  - name: docker:dind
+    alias: docker
 
 variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
   DOCKER_DRIVER: overlay2
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
@@ -17,18 +20,12 @@ before_script:
 
 build:
   stage: build
-  tags:
-    - build
   script:
-    - docker build -t "$IMAGE_NAME:$IMAGE_TAG" ./Dockerfile-bot-service
+    - docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
-  only:
-    - branches
 
 push:
   stage: push
-  tags:
-    - build
   script:
     - docker push "$IMAGE_NAME:$IMAGE_TAG"
     - docker push "$IMAGE_NAME:latest"
