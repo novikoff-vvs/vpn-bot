@@ -16,8 +16,10 @@ build:
   tags:
     - build
   script:
+    - unset DOCKER_HOST
     - docker build -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
+
 
 push:
   stage: push
