@@ -1,25 +1,33 @@
-stages:
-  - build
+image: docker:latest
+
+services:
+  - docker:dind
 
 variables:
-  IMAGE_NAME: "bot-service"
-  REGISTRY_URL: "registry.vladislav-novikov.ru"
-  IMAGE_FULL_PATH: "$REGISTRY_URL/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_REF_SLUG"
-  DOCKER_HOST: "tcp://docker:2375"
-  DOCKER_TLS_CERTDIR: ""  # отключаем TLS
   DOCKER_DRIVER: overlay2
+  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_TAG: $CI_COMMIT_SHORT_SHA
+
+stages:
+  - build
+  - push
+
+before_script:
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
 
 build:
-  image: docker:24.0.5
   stage: build
-  services:
-    - docker:24.0.5-dind
-  tags:
-    - build
   script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u "$CI_REGISTRY_USER" --password-stdin
-    - docker info  # Проверка, что docker работает
-    - docker build -t $IMAGE_FULL_PATH -f ./Dockerfile-bot-service .
-    - docker push $IMAGE_FULL_PATH
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - docker build -t "$IMAGE_NAME:$IMAGE_TAG" ./Dockerfile-bot-service
+    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
+  only:
+    - branches
+
+push:
+  stage: push
+  script:
+    - docker push "$IMAGE_NAME:$IMAGE_TAG"
+    - docker push "$IMAGE_NAME:latest"
+  only:
+    - main
+    - master
