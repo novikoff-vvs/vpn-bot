@@ -16,13 +16,52 @@ stages:
 before_script:
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
 
-build:
+build-bot-service:
   stage: build
   tags:
     - build
   script:
     - docker info  # отладка
     - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
+    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
+    - docker push "$IMAGE_NAME:latest"
+  only:
+    - main
+    - master
+
+build-payment-service:
+  stage: build
+  tags:
+    - build
+  script:
+    - docker info  # отладка
+    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-payment-service .
+    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
+    - docker push "$IMAGE_NAME:latest"
+  only:
+    - main
+    - master
+
+build-user-service:
+  stage: build
+  tags:
+    - build
+  script:
+    - docker info  # отладка
+    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-user-service .
+    - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
+    - docker push "$IMAGE_NAME:latest"
+  only:
+    - main
+    - master
+
+build-vpn-service:
+  stage: build
+  tags:
+    - build
+  script:
+    - docker info  # отладка
+    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$IMAGE_TAG" -f Dockerfile-vpn-service .
     - docker tag "$IMAGE_NAME:$IMAGE_TAG" "$IMAGE_NAME:latest"
     - docker push "$IMAGE_NAME:latest"
   only:
