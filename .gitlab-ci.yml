@@ -5,24 +5,20 @@ variables:
   IMAGE_NAME: "bot-service"
   REGISTRY_URL: "registry.vladislav-novikov.ru"
   IMAGE_FULL_PATH: "$REGISTRY_URL/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_REF_SLUG"
-
-  # Docker-in-Docker (DinD) settings
   DOCKER_HOST: "tcp://docker:2375"
-  DOCKER_TLS_CERTDIR: ""
+  DOCKER_TLS_CERTDIR: ""  # отключаем TLS
   DOCKER_DRIVER: overlay2
 
 build:
   image: docker:24.0.5
   stage: build
-  tags:
-    - build
   services:
     - docker:24.0.5-dind
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
+  tags:
+    - build
   script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $CI_REGISTRY_USER --password-stdin
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u "$CI_REGISTRY_USER" --password-stdin
+    - docker info  # Проверка, что docker работает
     - docker build -t $IMAGE_FULL_PATH -f ./Dockerfile-bot-service .
     - docker push $IMAGE_FULL_PATH
   rules:
