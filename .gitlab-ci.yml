@@ -4,13 +4,9 @@ services:
   - docker:dind
 
 variables:
-  IMAGE_NAME: $CI_REGISTRY_IMAGE
+  IMAGE_NAME: $CI_REGISTRY_IMAGE         # Например: registry.vladislav-novikov.ru/nvs/monorepo
   IMAGE_TAG: $CI_COMMIT_SHORT_SHA
-  BOT_SERVICE_NAME: bot-service
-  PAYMENT_SERVICE_NAME: payment-service
-  USER_SERVICE_NAME: user-service
-  VPN_SERVICE_NAME: vpn-service
-  DOCKER_TLS_CERTDIR: ""  # Отключает TLS, упрощает соединение с dind
+  DOCKER_TLS_CERTDIR: ""                # Отключает TLS внутри dind
 
 stages:
   - build
@@ -19,51 +15,43 @@ stages:
 before_script:
   - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
 
+# Шаблон для сборки сервисов
+.build_template: &build_template
+  stage: build
+  tags:
+    - build
+  only:
+    - main
+    - master
+  script:
+    - docker info
+    - echo "Building service: $SERVICE_NAME"
+    - docker build --build-arg SERVICE_NAME=$SERVICE_NAME -t "$IMAGE_NAME:$SERVICE_NAME-$IMAGE_TAG" -f $DOCKERFILE .
+    - docker push "$IMAGE_NAME:$SERVICE_NAME-$IMAGE_TAG"
+    - docker tag "$IMAGE_NAME:$SERVICE_NAME-$IMAGE_TAG" "$IMAGE_NAME:$SERVICE_NAME-latest"
+    - docker push "$IMAGE_NAME:$SERVICE_NAME-latest"
+
+# Каждая job использует шаблон и подставляет имя сервиса и Dockerfile
 build-bot-service:
-  stage: build
-  tags:
-    - build
-  script:
-    - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$BOT_SERVICE_NAME -t "$IMAGE_NAME-$BOT_SERVICE_NAME:$IMAGE_TAG" -f Dockerfile-bot-service .
-    - docker tag "$IMAGE_NAME-$BOT_SERVICE_NAME:$IMAGE_TAG" "$IMAGE_NAME-$BOT_SERVICE_NAME:latest"
-    - docker push "$IMAGE_NAME-$BOT_SERVICE_NAME:latest"
-  only:
-    - main
-    - master
-build-payment-service:
-  stage: build
-  tags:
-    - build
-  script:
-    - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$PAYMENT_SERVICE_NAME -t "$IMAGE_NAME-$PAYMENT_SERVICE_NAME:$IMAGE_TAG" -f Dockerfile-payment-service .
-    - docker tag "$IMAGE_NAME-$PAYMENT_SERVICE_NAME:$IMAGE_TAG" "$IMAGE_NAME-$PAYMENT_SERVICE_NAME:latest"
-    - docker push "$IMAGE_NAME-$PAYMENT_SERVICE_NAME:latest"
-  only:
-    - main
-    - master
+  <<: *build_template
+  variables:
+    SERVICE_NAME: bot-service
+    DOCKERFILE: Dockerfile-bot-service
+
 build-user-service:
-  stage: build
-  tags:
-    - build
-  script:
-    - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$USER_SERVICE_NAME -t "$IMAGE_NAME-$USER_SERVICE_NAME:$IMAGE_TAG" -f Dockerfile-user-service .
-    - docker tag "$IMAGE_NAME-$USER_SERVICE_NAME:$IMAGE_TAG" "$IMAGE_NAME-$USER_SERVICE_NAME:latest"
-    - docker push "$IMAGE_NAME-$USER_SERVICE_NAME:latest"
-  only:
-    - main
-    - master
+  <<: *build_template
+  variables:
+    SERVICE_NAME: user-service
+    DOCKERFILE: Dockerfile-user-service
+
+build-payment-service:
+  <<: *build_template
+  variables:
+    SERVICE_NAME: payment-service
+    DOCKERFILE: Dockerfile-payment-service
+
 build-vpn-service:
-  stage: build
-  tags:
-    - build
-  script:
-    - docker info  # отладка
-    - docker build --build-arg SERVICE_NAME=$VPN_SERVICE_NAME -t "$IMAGE_NAME-$VPN_SERVICE_NAME:$IMAGE_TAG" -f Dockerfile-vpn-service .
-    - docker tag "$IMAGE_NAME-$VPN_SERVICE_NAME:$IMAGE_TAG" "$IMAGE_NAME-$VPN_SERVICE_NAME:latest"
-    - docker push "$IMAGE_NAME-$VPN_SERVICE_NAME:latest"
-  only:
-    - main
-    - master
+  <<: *build_template
+  variables:
+    SERVICE_NAME: vpn-service
+    DOCKERFILE: Dockerfile-vpn-service
