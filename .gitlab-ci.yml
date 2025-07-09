@@ -14,6 +14,8 @@ variables:
 build:
   image: docker:24.0.5
   stage: build
+  tags:
+    - build
   services:
     - name: docker:24.0.5-dind
       alias: docker  # Makes it accessible at hostname "docker"
