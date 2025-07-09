@@ -21,7 +21,6 @@ build_single_service:
     - build
   script:
     - IMAGE_NAME="${BASE_IMAGE_NAME}-${SERVICE_NAME}"
-    - echo "Building image for service $SERVICE_NAME with tag: $TAG ..."
     - docker build \
       --build-arg SERVICE_NAME="$SERVICE_NAME" \
       -t "$REGISTRY/$IMAGE_NAME:$TAG" \
