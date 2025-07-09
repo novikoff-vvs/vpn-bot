@@ -3,7 +3,7 @@ stages:
 
 variables:
   BASE_IMAGE_NAME: "vpn-bot"
-  TAG: "latest"
+  TAG: "build"
   REGISTRY: "registry.novvs.ru"
 
 # По умолчанию билдим все сервисы, но можно переопределить переменную SERVICES в настройках пайплайна
