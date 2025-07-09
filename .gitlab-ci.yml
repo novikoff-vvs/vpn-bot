@@ -1,32 +1,26 @@
 stages:
   - build
-  - push
 
 variables:
   IMAGE_NAME: "bot-service"
-  IMAGE_TAG: "latest"
   REGISTRY_URL: "registry.vladislav-novikov.ru"
-  IMAGE_FULL_PATH: "$REGISTRY_URL/$CI_PROJECT_PATH/$IMAGE_NAME:$IMAGE_TAG"
-  # Add DOCKER_HOST to point to the dind service
+  IMAGE_FULL_PATH: "$REGISTRY_URL/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_REF_SLUG"
+
+  # Docker-in-Docker (DinD) settings
   DOCKER_HOST: "tcp://docker:2375"
-  DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_DRIVER: overlay2
 
 build:
   image: docker:24.0.5
   stage: build
-  tags:
-    - build
   services:
     - name: docker:24.0.5-dind
-      alias: docker
-  variables:
-    # Use consistent naming for the image tag
-    IMAGE_FULL_PATH: "$REGISTRY_URL/$CI_PROJECT_PATH/$IMAGE_NAME:$CI_COMMIT_REF_SLUG"
+      alias: docker  # Makes it accessible at hostname "docker"
   script:
-    - docker info
+    - docker info  # Verify connection
     - echo "$CI_REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $CI_REGISTRY_USER --password-stdin
-    - docker build -f ./Dockerfile-bot-service -t $IMAGE_FULL_PATH .
+    - docker build -t $IMAGE_FULL_PATH -f ./Dockerfile-bot-service .
     - docker push $IMAGE_FULL_PATH
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
