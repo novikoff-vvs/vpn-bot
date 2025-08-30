@@ -1,4 +1,4 @@
-ARG SERVICE_NAME
+ARG SERVICE_NAME=bot_service
 FROM --platform=linux/amd64 golang:1.23-alpine3.21 as build
 ARG SERVICE_NAME
 

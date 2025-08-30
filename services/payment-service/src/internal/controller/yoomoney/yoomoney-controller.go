@@ -88,7 +88,7 @@ func CreateYoomoneyLog(client *user.Client, service *payment.Service, log logger
 
 		if c.Request.FormValue("sha1_hash") != sha1Hash {
 			log.Error("SHA1 hash mismatch – possible spoofed request or secret mismatch.")
-			//return
+			return
 		}
 
 		log.Info("SHA1 hash matched — notification is verified.")
