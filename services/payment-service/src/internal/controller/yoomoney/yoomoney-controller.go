@@ -41,15 +41,12 @@ func CreateYoomoneyLog(client *user.Client, service *payment.Service, log logger
 			return
 		}
 
+		log.Info(fmt.Sprintf("%+v\n", c.Request.PostForm))
+
 		for key, values := range c.Request.PostForm {
 			for _, value := range values {
 				log.Info(fmt.Sprintf("PostForm param: %s = %s", key, value))
 			}
-		}
-
-		if err := c.Request.ParseForm(); err != nil {
-			c.String(http.StatusBadRequest, "Ошибка парсинга формы")
-			return
 		}
 
 		form := c.Request.PostForm
@@ -91,7 +88,7 @@ func CreateYoomoneyLog(client *user.Client, service *payment.Service, log logger
 
 		if c.Request.FormValue("sha1_hash") != sha1Hash {
 			log.Error("SHA1 hash mismatch – possible spoofed request or secret mismatch.")
-			//return
+			return
 		}
 
 		log.Info("SHA1 hash matched — notification is verified.")
