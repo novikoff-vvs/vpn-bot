@@ -29,6 +29,7 @@ ARG SERVICE_NAME
 
 COPY --from=build --chown=nobody:nobody /app/dist/application /app/application
 COPY --from=build --chown=nobody:nobody /app/${SERVICE_NAME}/configs /app/configs
+COPY --from=build --chown=nobody:nobody /app/${SERVICE_NAME}/.env /app/.env
 
 WORKDIR /app
 
