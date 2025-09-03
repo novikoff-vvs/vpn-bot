@@ -52,7 +52,7 @@ func (b Builder) GetReturnMessage(msg message) Builder {
 func (b Builder) GetInstructionMessage(msg message) Builder {
 	b.sndMsg = msg.Answer(
 		tg.HTML.Text(
-			tg.HTML.Link("Инструкция", "https://s.novvs.ru/BGu42"),
+			tg.HTML.Link("Инструкция", "https://s.novvs.ru/rOnXD"),
 		),
 	).ParseMode(tg.HTML)
 	return b
