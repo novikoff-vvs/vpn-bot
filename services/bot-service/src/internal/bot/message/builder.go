@@ -64,7 +64,7 @@ func (b Builder) GetSuccessRegister(msg message, vessaLink string) Builder {
 		tg.HTML.Text(tg.HTML.Bold("🔐 Важно:"), tg.HTML.Blockquote("Эта ссылка является вашим личным доступом.\n\nНикому не передавайте её – это может привести к потере аккаунта.")),
 		"",
 		tg.HTML.Line(tg.HTML.Bold("🔗 Ваша подписка: "), tg.HTML.Link("SUBSCRIPTION-URL", vessaLink)),
-		tg.HTML.Line(tg.HTML.Bold("📚 Инструкции по настройке клиентов:"), tg.HTML.Link("WIKI", "https://s.novvs.ru/BRVz9")),
+		tg.HTML.Line(tg.HTML.Bold("📚 Инструкции по настройке клиентов:"), tg.HTML.Link("WIKI", "https://s.novvs.ru/rOnXD")),
 	)).ParseMode(tg.HTML)
 	return b
 }
