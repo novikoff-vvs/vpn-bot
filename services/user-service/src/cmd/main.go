@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/novikoff-vvs/logger"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 	"os"
 	"pkg/infrastructure/DB/gorm"
 	"pkg/infrastructure/http"
@@ -13,6 +10,8 @@ import (
 	"user-service/docs"
 	"user-service/internal/controller/subscription"
 	"user-service/internal/controller/user"
+	"user-service/internal/cron"
+	subscriptionJob "user-service/internal/job/subscription"
 	"user-service/internal/migration"
 	"user-service/internal/plan"
 	"user-service/internal/repository/plan/sqlite"
@@ -20,6 +19,10 @@ import (
 	sqliteUser "user-service/internal/repository/user/sqlite"
 	subscription2 "user-service/internal/subscription"
 	user2 "user-service/internal/user"
+
+	"github.com/novikoff-vvs/logger"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 //	@contact.name	API Support
@@ -80,6 +83,17 @@ func main() {
 
 	user.RegisterRoutes(s, userService, LoggingService)
 	subscription.RegisterRoutes(s, subscriptionService)
+
+	// Initialize and start cron worker for subscription expiring notifications
+	expiringJob := subscriptionJob.NewExpiringNotificationJob(subscriptionRepo, LoggingService)
+	cronWorker, err := cron.NewWorker(expiringJob, LoggingService)
+	if err != nil {
+		LoggingService.Error(fmt.Sprintf("Error initializing cron worker: %s", err.Error()))
+		return
+	}
+	cronWorker.Start()
+	LoggingService.Info("Cron worker started")
+
 	err = s.Run(cfg.Base.AppPort)
 	if err != nil {
 		LoggingService.Error(err.Error())

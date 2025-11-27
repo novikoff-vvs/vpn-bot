@@ -5,13 +5,15 @@ import (
 	router2 "bot-service/internal/bot/router"
 	"bot-service/internal/repository/http/vpn"
 	notify_user "bot-service/internal/repository/pgsql/notify-user"
+	"bot-service/internal/singleton"
 	usrService "bot-service/internal/user"
 	"context"
 	"fmt"
-	"github.com/mr-linch/go-tg"
-	"github.com/mr-linch/go-tg/tgb"
 	"log"
 	"pkg/events"
+
+	"github.com/mr-linch/go-tg"
+	"github.com/mr-linch/go-tg/tgb"
 )
 
 type Service struct {
@@ -101,8 +103,50 @@ func (s *Service) NotifyNewMessage(event events.NewMessage) error {
 			log.Println(err)
 			continue
 		}
-		log.Println(fmt.Sprintf("Отправлено %d", user.ChatId))
+		log.Printf("Отправлено %d", user.ChatId)
 	}
 
+	return nil
+}
+
+func (s *Service) NotifySubscriptionExpiring(event events.SubscriptionExpiring) error {
+	log.Printf("NotifySubscriptionExpiring called: ChatId=%d, DaysRemaining=%d, UserUUID=%s",
+		event.ChatId, event.DaysRemaining, event.UserUUID)
+
+	var messageText string
+
+	switch event.DaysRemaining {
+	case 7:
+		messageText = tg.HTML.Text(
+			tg.HTML.Bold("⚠️ Подписка истекает через 7 дней"),
+		)
+	case 3:
+		messageText = tg.HTML.Text(
+			tg.HTML.Bold("⏰ Подписка истекает через 3 дня"),
+		)
+	case 1:
+		messageText = tg.HTML.Text(
+			tg.HTML.Bold("🚨 Подписка истекает завтра!"),
+		)
+	default:
+		messageText = tg.HTML.Text(
+			tg.HTML.Bold(fmt.Sprintf("⚠️ Подписка истекает через %d дней", event.DaysRemaining)),
+		)
+	}
+
+	// Получаем кнопку оплаты
+	paymentKeyboard := singleton.MessageBuilder().GetPaymentMenuKeyboard(event.UserUUID)
+
+	log.Printf("Attempting to send message to ChatId=%d", event.ChatId)
+	err := s.bot.SendMessage(tg.UserID(event.ChatId), messageText).
+		ParseMode(tg.HTML).
+		ReplyMarkup(paymentKeyboard).
+		DoVoid(context.Background())
+	if err != nil {
+		log.Printf("Error sending subscription expiring notification to ChatId=%d: %v", event.ChatId, err)
+		return err
+	}
+
+	log.Printf("Successfully sent subscription expiring notification to ChatId=%d", event.ChatId)
 	return nil
 }

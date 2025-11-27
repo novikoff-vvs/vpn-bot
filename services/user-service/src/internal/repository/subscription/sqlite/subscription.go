@@ -85,6 +85,34 @@ func (r *SubscriptionRepository) Deactivate(subscriptionID uint) error {
 	return tx.Error
 }
 
+// GetExpiringInDays возвращает активные подписки, которые истекают через указанное количество дней
+func (r *SubscriptionRepository) GetExpiringInDays(days int) ([]models.Subscription, error) {
+	var subs []models.Subscription
+	
+	now := time.Now()
+	// Вычисляем дату через N дней (начало дня)
+	targetDate := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).AddDate(0, 0, days)
+	// Начало и конец дня для точного сравнения
+	startOfDay := targetDate
+	endOfDay := startOfDay.Add(24 * time.Hour)
+	
+	// Ищем активные подписки, которые истекают в указанный день
+	// Проверяем, что expires_at попадает в диапазон указанного дня (включительно начало, исключительно конец)
+	tx := r.dbService.DB().
+		Where("deleted_at IS NULL").
+		Where("is_active = ?", true).
+		Where("expires_at >= ? AND expires_at < ?", startOfDay, endOfDay).
+		Preload("Plan").
+		Preload("User").
+		Find(&subs)
+	
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	
+	return subs, nil
+}
+
 func NewSubscriptionRepository(dbService *gorm.DBService) *SubscriptionRepository {
 	return &SubscriptionRepository{
 		dbService: dbService,
